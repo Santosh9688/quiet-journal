@@ -1919,184 +1919,308 @@ Action Type: Build Good Habit
 
       const noteType = getNoteType(localContent);
 
+      const applyFormatting = (formatType) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentText = textarea.value;
+        const selectedText = currentText.substring(start, end);
+
+        let textToInsert = '';
+        let cursorOffset = 0;
+
+        switch (formatType) {
+          case 'bold':
+            textToInsert = `**${selectedText || 'bold'}**`;
+            cursorOffset = selectedText ? textToInsert.length : 2;
+            break;
+          case 'italic':
+            textToInsert = `*${selectedText || 'italic'}*`;
+            cursorOffset = selectedText ? textToInsert.length : 1;
+            break;
+          case 'bullet':
+            textToInsert = `\n• ${selectedText || 'List item'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'number':
+            textToInsert = `\n1. ${selectedText || 'List item'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'divider':
+            textToInsert = `\n━━━ SECTION NAME ━━━\n`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'insight':
+            textToInsert = `\n💡 Key Insight: ${selectedText || 'Insight text'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'shift':
+            textToInsert = `\n🎯 Identity Shift: ${selectedText || 'Shift description'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'action':
+            textToInsert = `\n⚡ 1% Habit Action: ${selectedText || 'Tiny habit action'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          default:
+            return;
+        }
+
+        textarea.focus();
+        try {
+          textarea.setSelectionRange(start, end);
+          if (!document.execCommand('insertText', false, textToInsert)) {
+            throw new Error('execCommand failed');
+          }
+        } catch (e) {
+          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+          if (noteType === 'chapter') {
+            const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(localContent);
+            const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
+            handleLocalChange(newContent);
+          } else if (noteType === 'habitLoop') {
+            const { habitTitle, actionType } = parseHabitLoopHeader(localContent);
+            const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
+            handleLocalChange(newContent);
+          } else if (noteType === 'friction') {
+            const { targetHabit, goal } = parseFrictionHeader(localContent);
+            const newContent = updateFrictionHeader(targetHabit, goal, newText);
+            handleLocalChange(newContent);
+          } else {
+            handleLocalChange(newText);
+          }
+        }
+
+        setTimeout(() => {
+          textarea.focus();
+          const newPos = start + cursorOffset;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 50);
+      };
+
+      const renderToolbar = () => (
+        <div className="editor-toolbar">
+          <button className="toolbar-btn" onClick={() => applyFormatting('bold')} title="Bold selected text">
+            <strong>B</strong>
+          </button>
+          <button className="toolbar-btn" onClick={() => applyFormatting('italic')} title="Italic selected text">
+            <em>I</em>
+          </button>
+          <div className="toolbar-divider"></div>
+          <button className="toolbar-btn" onClick={() => applyFormatting('bullet')} title="Insert bullet list item">
+            • List
+          </button>
+          <button className="toolbar-btn" onClick={() => applyFormatting('number')} title="Insert numbered list item">
+            1. List
+          </button>
+          <button className="toolbar-btn" onClick={() => applyFormatting('divider')} title="Insert section divider">
+            ━ Divider
+          </button>
+          <div className="toolbar-divider"></div>
+          <button className="toolbar-btn" onClick={() => applyFormatting('insight')} title="Insert Key Insight block">
+            💡 Insight
+          </button>
+          <button className="toolbar-btn" onClick={() => applyFormatting('shift')} title="Insert Identity Shift block">
+            🎯 Shift
+          </button>
+          <button className="toolbar-btn" onClick={() => applyFormatting('action')} title="Insert 1% Habit Action block">
+            ⚡ Action
+          </button>
+        </div>
+      );
+
       if (noteType === 'chapter') {
         const { chapterNum, chapterTitle, pages, started, restContent } = parseChapterHeader(localContent);
         return (
-          <div className="editor-structured-container">
-            <div className="meta-inputs-grid">
-              <div className="meta-input-group" style={{ width: '80px' }}>
-                <label className="meta-label">Chapter</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={chapterNum} 
-                  placeholder="e.g. 1"
-                  onChange={(e) => {
-                    const newContent = updateChapterHeader(e.target.value, chapterTitle, pages, started, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
+          <React.Fragment>
+            {renderToolbar()}
+            <div className="editor-structured-container">
+              <div className="meta-inputs-grid">
+                <div className="meta-input-group" style={{ width: '80px' }}>
+                  <label className="meta-label">Chapter</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={chapterNum} 
+                    placeholder="e.g. 1"
+                    onChange={(e) => {
+                      const newContent = updateChapterHeader(e.target.value, chapterTitle, pages, started, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
+                
+                <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                  <label className="meta-label">Chapter Title</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={chapterTitle} 
+                    placeholder="The Surprising Power of Atomic Habits"
+                    onChange={(e) => {
+                      const newContent = updateChapterHeader(chapterNum, e.target.value, pages, started, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
+                
+                <div className="meta-input-group" style={{ width: '100px' }}>
+                  <label className="meta-label">Pages</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={pages} 
+                    placeholder="15-28"
+                    onChange={(e) => {
+                      const newContent = updateChapterHeader(chapterNum, chapterTitle, e.target.value, started, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
+                
+                <div className="meta-input-group" style={{ width: '120px' }}>
+                  <label className="meta-label">Started</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={started} 
+                    placeholder="05/28/2026"
+                    onChange={(e) => {
+                      const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, e.target.value, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
               </div>
-              
-              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                <label className="meta-label">Chapter Title</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={chapterTitle} 
-                  placeholder="The Surprising Power of Atomic Habits"
-                  onChange={(e) => {
-                    const newContent = updateChapterHeader(chapterNum, e.target.value, pages, started, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
-              </div>
-              
-              <div className="meta-input-group" style={{ width: '100px' }}>
-                <label className="meta-label">Pages</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={pages} 
-                  placeholder="15-28"
-                  onChange={(e) => {
-                    const newContent = updateChapterHeader(chapterNum, chapterTitle, e.target.value, started, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
-              </div>
-              
-              <div className="meta-input-group" style={{ width: '120px' }}>
-                <label className="meta-label">Started</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={started} 
-                  placeholder="05/28/2026"
-                  onChange={(e) => {
-                    const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, e.target.value, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
-              </div>
+              <textarea
+                ref={textareaRef}
+                className="journal-textarea"
+                value={restContent}
+                onChange={(e) => {
+                  const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
+                  handleLocalChange(newContent);
+                }}
+                placeholder="Write your chapter review notes here..."
+                autoFocus
+              />
             </div>
-            <textarea
-              ref={textareaRef}
-              className="journal-textarea"
-              value={restContent}
-              onChange={(e) => {
-                const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
-                handleLocalChange(newContent);
-              }}
-              placeholder="Write your chapter review notes here..."
-              autoFocus
-            />
-          </div>
+          </React.Fragment>
         );
       } else if (noteType === 'habitLoop') {
         const { habitTitle, actionType, restContent } = parseHabitLoopHeader(localContent);
         return (
-          <div className="editor-structured-container">
-            <div className="meta-inputs-grid">
-              <div className="meta-input-group" style={{ flex: 1, minWidth: '200px' }}>
-                <label className="meta-label">Habit Title</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={habitTitle} 
-                  placeholder="e.g. Read every night before sleep"
-                  onChange={(e) => {
-                    const newContent = updateHabitLoopHeader(e.target.value, actionType, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
+          <React.Fragment>
+            {renderToolbar()}
+            <div className="editor-structured-container">
+              <div className="meta-inputs-grid">
+                <div className="meta-input-group" style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="meta-label">Habit Title</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={habitTitle} 
+                    placeholder="e.g. Read every night before sleep"
+                    onChange={(e) => {
+                      const newContent = updateHabitLoopHeader(e.target.value, actionType, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
+                
+                <div className="meta-input-group" style={{ width: '200px' }}>
+                  <label className="meta-label">Action Type</label>
+                  <select 
+                    className="meta-input select" 
+                    value={actionType}
+                    onChange={(e) => {
+                      const newContent = updateHabitLoopHeader(habitTitle, e.target.value, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  >
+                    <option value="">Select Action Type</option>
+                    <option value="Build Good Habit">Build Good Habit</option>
+                    <option value="Break Bad Habit">Break Bad Habit</option>
+                  </select>
+                </div>
               </div>
-              
-              <div className="meta-input-group" style={{ width: '200px' }}>
-                <label className="meta-label">Action Type</label>
-                <select 
-                  className="meta-input select" 
-                  value={actionType}
-                  onChange={(e) => {
-                    const newContent = updateHabitLoopHeader(habitTitle, e.target.value, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                >
-                  <option value="">Select Action Type</option>
-                  <option value="Build Good Habit">Build Good Habit</option>
-                  <option value="Break Bad Habit">Break Bad Habit</option>
-                </select>
-              </div>
+              <textarea
+                ref={textareaRef}
+                className="journal-textarea"
+                value={restContent}
+                onChange={(e) => {
+                  const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
+                  handleLocalChange(newContent);
+                }}
+                placeholder="Design the 4 laws of habit loops here..."
+                autoFocus
+              />
             </div>
-            <textarea
-              ref={textareaRef}
-              className="journal-textarea"
-              value={restContent}
-              onChange={(e) => {
-                const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
-                handleLocalChange(newContent);
-              }}
-              placeholder="Design the 4 laws of habit loops here..."
-              autoFocus
-            />
-          </div>
+          </React.Fragment>
         );
       } else if (noteType === 'friction') {
         const { targetHabit, goal, restContent } = parseFrictionHeader(localContent);
         return (
-          <div className="editor-structured-container">
-            <div className="meta-inputs-grid">
-              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                <label className="meta-label">Target Habit</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={targetHabit} 
-                  placeholder="e.g. Limit morning social media scrolling"
-                  onChange={(e) => {
-                    const newContent = updateFrictionHeader(e.target.value, goal, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
+          <React.Fragment>
+            {renderToolbar()}
+            <div className="editor-structured-container">
+              <div className="meta-inputs-grid">
+                <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                  <label className="meta-label">Target Habit</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={targetHabit} 
+                    placeholder="e.g. Limit morning social media scrolling"
+                    onChange={(e) => {
+                      const newContent = updateFrictionHeader(e.target.value, goal, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
+                
+                <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                  <label className="meta-label">Goal</label>
+                  <input 
+                    type="text" 
+                    className="meta-input" 
+                    value={goal} 
+                    placeholder="e.g. Reduce daily screen time by 30 mins"
+                    onChange={(e) => {
+                      const newContent = updateFrictionHeader(targetHabit, e.target.value, restContent);
+                      handleLocalChange(newContent);
+                    }}
+                  />
+                </div>
               </div>
-              
-              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                <label className="meta-label">Goal</label>
-                <input 
-                  type="text" 
-                  className="meta-input" 
-                  value={goal} 
-                  placeholder="e.g. Reduce daily screen time by 30 mins"
-                  onChange={(e) => {
-                    const newContent = updateFrictionHeader(targetHabit, e.target.value, restContent);
-                    handleLocalChange(newContent);
-                  }}
-                />
-              </div>
+              <textarea
+                ref={textareaRef}
+                className="journal-textarea"
+                value={restContent}
+                onChange={(e) => {
+                  const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
+                  handleLocalChange(newContent);
+                }}
+                placeholder="Define invisible cues, friction canvas here..."
+                autoFocus
+              />
             </div>
-            <textarea
-              ref={textareaRef}
-              className="journal-textarea"
-              value={restContent}
-              onChange={(e) => {
-                const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
-                handleLocalChange(newContent);
-              }}
-              placeholder="Define invisible cues, friction canvas here..."
-              autoFocus
-            />
-          </div>
+          </React.Fragment>
         );
       } else {
         return (
-          <textarea
-            ref={textareaRef}
-            className="journal-textarea"
-            value={localContent}
-            onChange={(e) => handleLocalChange(e.target.value)}
-            placeholder="Write, paste, or insert a habit design template..."
-            autoFocus
-          />
+          <React.Fragment>
+            {renderToolbar()}
+            <textarea
+              ref={textareaRef}
+              className="journal-textarea"
+              value={localContent}
+              onChange={(e) => handleLocalChange(e.target.value)}
+              placeholder="Write, paste, or insert a habit design template..."
+              autoFocus
+            />
+          </React.Fragment>
         );
       }
     };
@@ -2302,74 +2426,7 @@ Action Type: Build Good Habit
         }
       };
 
-      // Add a formatting string/markup to textarea (keeps undo history)
-      const applyFormatting = (formatType) => {
-        const textarea = textareaRef.current;
-        const activeNote = notes.find(n => n.id === activeNoteId);
-        if (!textarea || !activeNote) return;
 
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const currentText = textarea.value;
-        const selectedText = currentText.substring(start, end);
-
-        let textToInsert = '';
-        let cursorOffset = 0;
-
-        switch (formatType) {
-          case 'bold':
-            textToInsert = `**${selectedText || 'bold'}**`;
-            cursorOffset = selectedText ? textToInsert.length : 2;
-            break;
-          case 'italic':
-            textToInsert = `*${selectedText || 'italic'}*`;
-            cursorOffset = selectedText ? textToInsert.length : 1;
-            break;
-          case 'bullet':
-            textToInsert = `\n• ${selectedText || 'List item'}`;
-            cursorOffset = textToInsert.length;
-            break;
-          case 'number':
-            textToInsert = `\n1. ${selectedText || 'List item'}`;
-            cursorOffset = textToInsert.length;
-            break;
-          case 'divider':
-            textToInsert = `\n━━━ SECTION NAME ━━━\n`;
-            cursorOffset = textToInsert.length;
-            break;
-          case 'insight':
-            textToInsert = `\n💡 Key Insight: ${selectedText || 'Insight text'}`;
-            cursorOffset = textToInsert.length;
-            break;
-          case 'shift':
-            textToInsert = `\n🎯 Identity Shift: ${selectedText || 'Shift description'}`;
-            cursorOffset = textToInsert.length;
-            break;
-          case 'action':
-            textToInsert = `\n⚡ 1% Habit Action: ${selectedText || 'Tiny habit action'}`;
-            cursorOffset = textToInsert.length;
-            break;
-          default:
-            return;
-        }
-
-        textarea.focus();
-        try {
-          textarea.setSelectionRange(start, end);
-          if (!document.execCommand('insertText', false, textToInsert)) {
-            throw new Error('execCommand failed');
-          }
-        } catch (e) {
-          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
-          handleEditNoteText(newText);
-        }
-
-        setTimeout(() => {
-          textarea.focus();
-          const newPos = start + cursorOffset;
-          textarea.setSelectionRange(newPos, newPos);
-        }, 50);
-      };
 
       // Add a daily entries block
       const handleAddDailyEntry = () => {
@@ -3104,41 +3161,11 @@ Action Type: Build Good Habit
                   <div className="editor-body">
                     <div className="editor-body-inner">
                       {editorMode === 'edit' ? (
-                        <React.Fragment>
-                          <div className="editor-toolbar">
-                            <button className="toolbar-btn" onClick={() => applyFormatting('bold')} title="Bold selected text">
-                              <strong>B</strong>
-                            </button>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('italic')} title="Italic selected text">
-                              <em>I</em>
-                            </button>
-                            <div className="toolbar-divider"></div>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('bullet')} title="Insert bullet list item">
-                              • List
-                            </button>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('number')} title="Insert numbered list item">
-                              1. List
-                            </button>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('divider')} title="Insert section divider">
-                              ━ Divider
-                            </button>
-                            <div className="toolbar-divider"></div>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('insight')} title="Insert Key Insight block">
-                              💡 Insight
-                            </button>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('shift')} title="Insert Identity Shift block">
-                              🎯 Shift
-                            </button>
-                            <button className="toolbar-btn" onClick={() => applyFormatting('action')} title="Insert 1% Habit Action block">
-                              ⚡ Action
-                            </button>
-                          </div>
-                          <NoteEditor 
-                            activeNote={activeNote} 
-                            onSave={handleEditNoteText} 
-                            textareaRef={textareaRef} 
-                          />
-                        </React.Fragment>
+                        <NoteEditor 
+                          activeNote={activeNote} 
+                          onSave={handleEditNoteText} 
+                          textareaRef={textareaRef} 
+                        />
                       ) : (
                         <div className="preview-container">
                           {renderPreview(activeNote.content)}
