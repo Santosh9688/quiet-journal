@@ -1929,40 +1929,91 @@ Action Type: Build Good Habit
         const selectedText = currentText.substring(start, end);
 
         let textToInsert = '';
-        let cursorOffset = 0;
+        let selStartOffset = 0;
+        let selEndOffset = 0;
 
         switch (formatType) {
           case 'bold':
-            textToInsert = `**${selectedText || 'bold'}**`;
-            cursorOffset = selectedText ? textToInsert.length : 2;
+            if (selectedText) {
+              textToInsert = `**${selectedText}**`;
+              selStartOffset = 2;
+              selEndOffset = 2 + selectedText.length;
+            } else {
+              textToInsert = '**bold**';
+              selStartOffset = 2;
+              selEndOffset = 6;
+            }
             break;
           case 'italic':
-            textToInsert = `*${selectedText || 'italic'}*`;
-            cursorOffset = selectedText ? textToInsert.length : 1;
+            if (selectedText) {
+              textToInsert = `*${selectedText}*`;
+              selStartOffset = 1;
+              selEndOffset = 1 + selectedText.length;
+            } else {
+              textToInsert = '*italic*';
+              selStartOffset = 1;
+              selEndOffset = 7;
+            }
             break;
           case 'bullet':
-            textToInsert = `\n• ${selectedText || 'List item'}`;
-            cursorOffset = textToInsert.length;
+            if (selectedText) {
+              textToInsert = `\n• ${selectedText}`;
+              selStartOffset = textToInsert.length;
+              selEndOffset = textToInsert.length;
+            } else {
+              textToInsert = '\n• List item';
+              selStartOffset = 3;
+              selEndOffset = 12;
+            }
             break;
           case 'number':
-            textToInsert = `\n1. ${selectedText || 'List item'}`;
-            cursorOffset = textToInsert.length;
+            if (selectedText) {
+              textToInsert = `\n1. ${selectedText}`;
+              selStartOffset = textToInsert.length;
+              selEndOffset = textToInsert.length;
+            } else {
+              textToInsert = '\n1. List item';
+              selStartOffset = 4;
+              selEndOffset = 13;
+            }
             break;
           case 'divider':
-            textToInsert = `\n━━━ SECTION NAME ━━━\n`;
-            cursorOffset = textToInsert.length;
+            textToInsert = '\n━━━ SECTION NAME ━━━\n';
+            selStartOffset = 5;
+            selEndOffset = 17;
             break;
           case 'insight':
-            textToInsert = `\n💡 Key Insight: ${selectedText || 'Insight text'}`;
-            cursorOffset = textToInsert.length;
+            if (selectedText) {
+              textToInsert = `\n💡 Key Insight: ${selectedText}`;
+              selStartOffset = textToInsert.length;
+              selEndOffset = textToInsert.length;
+            } else {
+              textToInsert = '\n💡 Key Insight: Insight text';
+              selStartOffset = 17;
+              selEndOffset = 29;
+            }
             break;
           case 'shift':
-            textToInsert = `\n🎯 Identity Shift: ${selectedText || 'Shift description'}`;
-            cursorOffset = textToInsert.length;
+            if (selectedText) {
+              textToInsert = `\n🎯 Identity Shift: ${selectedText}`;
+              selStartOffset = textToInsert.length;
+              selEndOffset = textToInsert.length;
+            } else {
+              textToInsert = '\n🎯 Identity Shift: Shift description';
+              selStartOffset = 20;
+              selEndOffset = 37;
+            }
             break;
           case 'action':
-            textToInsert = `\n⚡ 1% Habit Action: ${selectedText || 'Tiny habit action'}`;
-            cursorOffset = textToInsert.length;
+            if (selectedText) {
+              textToInsert = `\n⚡ 1% Habit Action: ${selectedText}`;
+              selStartOffset = textToInsert.length;
+              selEndOffset = textToInsert.length;
+            } else {
+              textToInsert = '\n⚡ 1% Habit Action: Tiny habit action';
+              selStartOffset = 21;
+              selEndOffset = 38;
+            }
             break;
           default:
             return;
@@ -1995,8 +2046,7 @@ Action Type: Build Good Habit
 
         setTimeout(() => {
           textarea.focus();
-          const newPos = start + cursorOffset;
-          textarea.setSelectionRange(newPos, newPos);
+          textarea.setSelectionRange(start + selStartOffset, start + selEndOffset);
         }, 50);
       };
 
