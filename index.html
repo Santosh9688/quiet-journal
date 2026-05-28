@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiet Journal — Reading Habit Companion</title>
+  
+  <!-- Cool data-URL SVG Favicon (Book + Growing Sprout) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23556b2f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z'/%3E%3Cpath d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'/%3E%3Cpath d='M12 8c.5-1.2 1.8-1.8 2.8-1.5' stroke='%23daa520' stroke-width='1.8'/%3E%3C/svg%3E">
+  
+  <!-- Typography & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet (Vanilla CSS with custom variables) -->
+  <style>
+    /* CSS Variables for Themes */
+    :root {
+      /* Warm Cream Theme (Default) */
+      --bg-primary: #fbf9f6;
+      --bg-sidebar: #f5eedf;
+      --bg-card: #ffffff;
+      --text-primary: #2d2a26;
+      --text-secondary: #655f58;
+      --text-muted: #9a9287;
+      --accent-color: #556b2f;       /* Calm Sage Green */
+      --accent-hover: #3d4f22;
+      --accent-soft: #e8ebdf;
+      --border-color: #e5dac9;
+      --active-bg: #eae0ce;
+      --shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.05);
+      --shadow-md: 0 4px 12px rgba(45, 42, 38, 0.08);
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-editor: 'Merriweather', Georgia, serif;
+      --font-mono: 'Fira Mono', monospace;
+    }
+
+    [data-theme="dark"] {
+      /* Quiet Night Theme */
+      --bg-primary: #121211;
+      --bg-sidebar: #1a1a19;
+      --bg-card: #20201e;
+      --text-primary: #e5e2dd;
+      --text-secondary: #adaba4;
+      --text-muted: #797772;
+      --accent-color: #8c9f7a;       /* Soft Sage for dark mode */
+      --accent-hover: #a3b593;
+      --accent-soft: #2a2d26;
+      --border-color: #2b2b29;
+      --active-bg: #2d2d2a;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Core Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Main App Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Loading Screen overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Sidebar Styling */
+    .sidebar {
+      width: 320px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      z-index: 20;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 24px 20px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+      cursor: default;
+    }
+
+    .app-logo {
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .brand-title:hover .app-logo {
+      transform: scale(1.1) rotate(6deg);
+    }
+
+    .nav-toggle-group {
+      display: flex;
+      background-color: var(--active-bg);
+      padding: 3px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      border: none;
+      background: none;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab.active {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Search Box */
+    .search-box-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .action-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 20px 16px 20px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .template-quick-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    /* Note List */
+    .note-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 12px 12px;
+    }
+
+    .note-item-wrapper {
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .note-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: none;
+      padding: 14px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      padding-right: 44px; /* Space for delete button */
+    }
+
+    .note-item:hover {
+      background-color: var(--active-bg);
+    }
+
+    .note-item.active {
+      background-color: var(--active-bg);
+    }
+
+    .note-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15%;
+      height: 70%;
+      width: 4px;
+      background-color: var(--accent-color);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .note-item-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-item-meta {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .delete-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: none;
+      padding: 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .note-item-wrapper:hover .delete-btn,
+    .delete-btn:focus-within {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      color: #b22222;
+      background-color: rgba(178, 34, 34, 0.08);
+    }
+
+    .delete-confirm-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--active-bg);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      z-index: 5;
+    }
+
+    .delete-confirm-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-confirm-yes {
+      background-color: #b22222;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-confirm-no {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .theme-toggle-btn {
+      border: none;
+      background: none;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--active-bg);
+      color: var(--text-primary);
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #2e7d32;
+    }
+
+    .sync-indicator.saving {
+      background-color: #ef6c00;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* Main Area Container */
+    .main-area {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Blank Slate Styling */
+    .blank-slate {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .logo-illustration-wrapper {
+      margin-bottom: 8px;
+      animation: pulse 2.5s infinite alternate ease-in-out;
+    }
+
+    .blank-slate-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .blank-slate-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* Editor Header */
+    .editor-header {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--bg-primary);
+      min-height: 65px;
+      z-index: 10;
+    }
+
+    .editor-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mobile-back-btn {
+      display: none;
+      border: none;
+      background: none;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 4px;
+    }
+
+    .mobile-back-btn:hover {
+      background-color: var(--active-bg);
+    }
+
+    .note-live-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .editor-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-preview-group {
+      display: flex;
+      background-color: var(--bg-sidebar);
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-toggle-mode {
+      border: none;
+      background: none;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-toggle-mode.active {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--active-bg);
+    }
+
+    /* Template Dropdown menu */
+    .template-dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      width: 240px;
+      z-index: 50;
+      overflow: hidden;
+      padding: 6px;
+    }
+
+    .dropdown-item {
+      border: none;
+      background: none;
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: background-color 0.15s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--active-bg);
+    }
+
+    .dropdown-item-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .dropdown-item-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Editor Core & Scroll Area */
+    .editor-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      justify-content: center;
+      padding: 40px 32px;
+      position: relative;
+    }
+
+    .editor-body-inner {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .journal-textarea {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: var(--font-editor);
+      font-size: 1.08rem;
+      line-height: 1.65;
+      padding: 0;
+    }
+
+    /* Previewer Render Formatting */
+    .preview-container {
+      font-family: var(--font-editor);
+      font-size: 1.08rem;
+      line-height: 1.65;
+      color: var(--text-primary);
+      width: 100%;
+      padding-bottom: 80px;
+    }
+
+    .preview-chapter-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      letter-spacing: -0.01em;
+    }
+
+    .preview-meta {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-divider {
+      display: flex;
+      align-items: center;
+      margin: 32px 0 16px 0;
+      color: var(--text-muted);
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .preview-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: var(--border-color);
+      margin-left: 12px;
+    }
+
+    .preview-divider.secondary {
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      margin: 24px 0 12px 0;
+      opacity: 0.85;
+    }
+
+    .preview-bullet {
+      margin-left: 20px;
+      list-style-type: disc;
+      margin-bottom: 6px;
+    }
+
+    .preview-ordered {
+      margin-left: 20px;
+      list-style-type: decimal;
+      margin-bottom: 6px;
+    }
+
+    .preview-text {
+      margin-bottom: 12px;
+    }
+
+    .preview-space {
+      height: 12px;
+    }
+
+    .preview-block {
+      display: flex;
+      gap: 12px;
+      background-color: var(--bg-sidebar);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .block-emoji {
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .block-content {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+    }
+
+    .block-content strong {
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .block-content div {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Loop builder header styles in preview */
+    .loop-builder-header {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: white;
+      padding: 20px 24px;
+      border-radius: 12px 12px 0 0;
+      margin-top: 24px;
+    }
+    
+    .loop-builder-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-family: var(--font-ui);
+    }
+
+    .loop-builder-meta-row {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    .loop-step-header {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Environmental Canvas styling in preview */
+    .canvas-block {
+      font-family: var(--font-ui);
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 3px solid;
+    }
+
+    .canvas-block.danger {
+      border-left-color: #b22222;
+      background-color: rgba(178, 34, 34, 0.04);
+    }
+
+    .canvas-block.success {
+      border-left-color: #2e7d32;
+      background-color: rgba(46, 125, 50, 0.04);
+    }
+
+    /* Experiment Tracker Styles */
+    .experiments-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .experiments-inner {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .experiments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .experiments-title-area h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .experiments-title-area p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .experiments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-bottom: 80px;
+    }
+
+    .experiment-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .experiment-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .experiment-title-input {
+      flex: 1;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed transparent;
+      padding: 2px 0;
+      font-family: var(--font-ui);
+      outline: none;
+      width: 100%;
+    }
+
+    .experiment-title-input:focus {
+      border-bottom-color: var(--accent-color);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon-danger {
+      background: none;
+      border: none;
+      padding: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon-danger:hover {
+      color: #b22222;
+      background-color: rgba(178, 34, 34, 0.08);
+    }
+
+    /* 4 Laws Grid Styling */
+    .laws-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .law-toggle {
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .law-toggle.active {
+      background-color: var(--accent-soft);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .law-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+
+    .law-toggle.active .law-dot {
+      background-color: var(--accent-color);
+    }
+
+    /* 7 Day Checklist Tracker */
+    .tracker-days-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tracker-days-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+
+    .tracker-days-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .day-box {
+      aspect-ratio: 1;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      gap: 4px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .day-box:hover {
+      border-color: var(--accent-color);
+    }
+
+    .day-box.checked {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+      color: white;
+    }
+
+    .day-number {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .day-box.checked .day-number {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .day-checkmark {
+      font-size: 0.95rem;
+      font-weight: 700;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .day-box.checked .day-checkmark {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Experiment Card Footer Stats */
+    .experiment-card-footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .streak-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .streak-fire-icon {
+      font-size: 1.1rem;
+      animation: flicker 1.5s infinite alternate;
+    }
+
+    @keyframes flicker {
+      from { transform: scale(0.95); opacity: 0.9; }
+      to { transform: scale(1.05); opacity: 1; }
+    }
+
+    .completion-bar-container {
+      width: 120px;
+      height: 6px;
+      background-color: var(--bg-primary);
+      border-radius: 3px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .completion-bar-fill {
+      height: 100%;
+      background-color: var(--accent-color);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .congrats-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background-color: var(--accent-soft);
+      color: var(--accent-color);
+      padding: 4px 10px;
+      border-radius: 12px;
+      animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Mobile / Responsive Styling */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: 100%;
+        display: none; /* Controlled by state */
+      }
+
+      .sidebar.active {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      .main-area {
+        width: 100%;
+        height: 100%;
+        display: none; /* Controlled by state */
+      }
+
+      .main-area.active {
+        display: flex;
+      }
+
+      .mobile-back-btn {
+        display: block;
+      }
+
+      .editor-header {
+        padding: 12px 16px;
+      }
+
+      .editor-body {
+        padding: 24px 16px;
+      }
+
+      .experiments-container {
+        padding: 24px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="root">
+    <!-- React mounts here -->
+  </div>
+
+  <!-- Loading Screen Placeholder -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <div style="font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #655f58;">Opening your journal...</div>
+  </div>
+
+  <!-- React & Babel Scripts -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+
+  <!-- React Code Component -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Unified storage helper
+    const storage = {
+      async getItem(key) {
+        if (typeof window !== 'undefined' && window.storage && typeof window.storage.getItem === 'function') {
+          try {
+            return await window.storage.getItem(key);
+          } catch (e) {
+            console.error("window.storage read error, falling back", e);
+          }
+        }
+        if (typeof window !== 'undefined' && window.localStorage) {
+          return window.localStorage.getItem(key);
+        }
+        return null;
+      },
+      async setItem(key, value) {
+        if (typeof window !== 'undefined' && window.storage && typeof window.storage.setItem === 'function') {
+          try {
+            await window.storage.setItem(key, value);
+            return;
+          } catch (e) {
+            console.error("window.storage write error, falling back", e);
+          }
+        }
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(key, value);
+        }
+      }
+    };
+
+    const getTodayDateString = () => {
+      return new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    };
+
+    // The Three Cool Templates based on Atomic Habits
+    const Templates = {
+      chapter: (date) => `📖 Ch [#]: [Chapter Title]
+Pages: [X–Y] | Started: ${date}
+
+━━━ IDENTITY STATEMENT ━━━
+👤 Identity Goal: I want to become the type of person who...
+🌱 System Change: To do this, I will design a system where...
+
+━━━ DAILY ENTRIES ━━━
+📅 ${date} — pages [X–Y]
+💡 Key Insight: "Quote or concept that clicked."
+🎯 Identity Shift: "If I believed this, I would act differently by..."
+📝 One-line: "Summary in my own words."
+
+━━━ SYSTEM EVALUATION ━━━
+🔍 Current Cue: [What triggers my current action?]
+🚧 Friction Level: [Low / Medium / High]
+⚡ 1% Habit Action: [A tiny 2-minute action to start today]
+
+━━━ CHAPTER WRAP ━━━
+❓ Core Question:
+🔬 Evidence:
+  1. 
+✅ Conclusion:
+🛠️ Apply Action: `,
+
+      habitLoop: () => `🔄 HABIT LOOP BUILDER
+Habit Title: [E.g., Read every night before sleep]
+Action Type: [Build Good Habit / Break Bad Habit]
+
+1. MAKE IT OBVIOUS (Cue)
+📍 Environmental Cue: E.g., Lay book on pillow when making the bed
+🔗 Habit Stacking: After I [Current Habit], I will [New Habit]
+
+2. MAKE IT ATTRACTIVE (Craving)
+🔥 Temptation Bundling: I will pair [New Habit] with [Thing I Want]
+👥 Social Alignment: How can I align this with my social groups?
+
+3. MAKE IT EASY (Response)
+⏳ 2-Minute Rule: Scaled-down habit: E.g., Read just 1 page
+🛠️ Friction Reducer: Charge my phone in the kitchen overnight
+
+4. MAKE IT SATISFYING (Reward)
+🏆 Immediate Reward: Sip tea / Check tracker checkmark
+📈 Track Progress: Tick off the day on my streak tracker`,
+
+      frictionCanvas: () => `🎨 ENVIRONMENTAL DESIGN CANVAS
+Target Habit: [Habit Name]
+Goal: [E.g., Limit morning social media scrolling]
+
+🔴 OUT OF SIGHT (Make it Invisible)
+- Hide the cues from my physical/digital space:
+
+🔴 SCALE UP FRICTION (Make it Difficult)
+- Add 3-4 steps of difficulty before I can do it:
+
+🟢 MAKE IT SCREAMINGLY OBVIOUS (Cue)
+- How can I visually highlight the good cue?
+
+🟢 PREP THE ENVIRONMENT (Frictionless Setup)
+- How can I prepare the tools/space in advance:`
+    };
+
+    // Seed Notes Data
+    const getWelcomeNote = () => ({
+      id: "welcome-chapter-note",
+      content: `📖 Ch 1: The Surprising Power of Atomic Habits
+Pages: 15–28 | Started: ${getTodayDateString()}
+
+━━━ IDENTITY STATEMENT ━━━
+👤 Identity Goal: I want to become the type of person who is physically fit and never misses a workout.
+🌱 System Change: To do this, I will design a system where my gym clothes are prepped the night before and I exercise for 5 minutes right after my morning coffee.
+
+━━━ DAILY ENTRIES ━━━
+📅 ${getTodayDateString()} — pages 15–20
+💡 Key Insight:
+  • "Habits are the compound interest of self-improvement." A tiny 1% improvement daily results in a 37x improvement over a year.
+🎯 Identity Shift:
+  Shift my focus from goals to systems. Instead of obsessing over reading a list of 50 books, I should focus on setting up a cozy desk space and reading 5 pages every morning.
+📝 One-line:
+  Tiny compounding choices design our trajectory; systems outweigh outcomes.
+
+━━━ SYSTEM EVALUATION ━━━
+🔍 Current Cue: Seeing my phone on my nightstand first thing in the morning.
+🚧 Friction Level: Low (it's right next to my hand).
+⚡ 1% Habit Action: Move the phone to the hallway charger overnight and place a book on the nightstand instead.
+
+━━━ CHAPTER WRAP ━━━
+❓ Core Question:
+  What daily visual cues trigger my bad habits right now?
+🔬 Evidence:
+  1. My phone is on my bedside table, causing me to scroll for 30 minutes every morning.
+  2. The book is tucked away inside a drawer, out of sight.
+✅ Conclusion:
+  My habits are currently reacting to environmental design. I need to make positive cues obvious.
+🛠️ Apply Action:
+  Move phone charger to kitchen overnight, and put the library book on my pillow during morning bed-making.
+
+━━━ HABIT DESIGN CANVASES ━━━
+🔄 HABIT LOOP BUILDER
+Habit Title: Read 10 pages of Atomic Habits before bed
+Action Type: Build Good Habit
+
+1. MAKE IT OBVIOUS (Cue)
+📍 Environmental Cue: Placed on my pillow when I make the bed in the morning.
+🔗 Habit Stacking: After I crawl into bed, I will open the book and read.
+
+2. MAKE IT ATTRACTIVE (Craving)
+🔥 Temptation Bundling: I will sip a cup of hot chamomile tea while reading.
+👥 Social Alignment: Discussing insights with my partner on weekends.
+
+3. MAKE IT EASY (Response)
+⏳ 2-Minute Rule: Just read 1 page. Once I start, it's easy to read more.
+🛠️ Friction Reducer: Keep phone in the kitchen charger so it's not a distraction.
+
+4. MAKE IT SATISFYING (Reward)
+🏆 Immediate Reward: Checking off the day in my Experiment Tracker.
+📈 Track Progress: Watch my streak grow in the tracker app.`,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    });
+
+    // Seed Experiment Data
+    const getDefaultExperiment = () => ({
+      id: "default-habit-experiment",
+      title: "Read 10 pages of Atomic Habits before bed",
+      laws: {
+        obvious: true,
+        attractive: true,
+        easy: true,
+        satisfying: true
+      },
+      days: [true, true, false, false, false, false, false],
+      createdAt: new Date().toISOString()
+    });
+
+    // Brand Medallion Logo
+    const Logo = ({ size = 24, className = "" }) => (
+      <svg 
+        className={`app-logo ${className}`} 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="11" fill="var(--bg-primary)" stroke="var(--border-color)" strokeWidth="1.2"/>
+        <path 
+          d="M7.5 9.5c0-.8.6-1.5 1.5-1.5h3v7.5H9c-.9 0-1.5-.7-1.5-1.5V9.5z" 
+          stroke="var(--accent-color)" 
+          strokeWidth="1.8" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+        <path 
+          d="M16.5 9.5c0-.8-.6-1.5-1.5-1.5h-3v7.5h3c.9 0 1.5-.7 1.5-1.5V9.5z" 
+          stroke="var(--accent-color)" 
+          strokeWidth="1.8" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+        <path 
+          d="M12 7.5c.6-1 1.8-1.5 2.8-1" 
+          stroke="#daa520" 
+          strokeWidth="1.6" 
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+
+    // Custom icons
+    const Icons = {
+      BookOpen: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      ),
+      Plus: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      ),
+      Search: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      ),
+      Trash: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      ),
+      Sun: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M20 12h2"/><path d="M2 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      ),
+      Moon: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      ),
+      ChevronLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      ),
+      Edit: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      ),
+      Eye: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      )
+    };
+
+    function App() {
+      // Basic States
+      const [view, setView] = useState('journal');
+      const [notes, setNotes] = useState([]);
+      const [activeNoteId, setActiveNoteId] = useState(null);
+      const [experiments, setExperiments] = useState([]);
+      
+      const [searchQuery, setSearchQuery] = useState('');
+      const [theme, setTheme] = useState('light');
+      
+      const [isLoading, setIsLoading] = useState(true);
+      const [isSaving, setIsSaving] = useState(false);
+      const [error, setError] = useState(null);
+      
+      // Editor modes
+      const [editorMode, setEditorMode] = useState('edit');
+      const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+      const [mobileSidebarActive, setMobileSidebarActive] = useState(true);
+      
+      // Dynamic dropdown inserts
+      const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+      
+      const textareaRef = useRef(null);
+
+      // Close template menu on click outside
+      useEffect(() => {
+        if (!templateMenuOpen) return;
+        const closeMenu = () => setTemplateMenuOpen(false);
+        document.addEventListener('click', closeMenu);
+        return () => document.removeEventListener('click', closeMenu);
+      }, [templateMenuOpen]);
+
+      // 1. Initial Load
+      useEffect(() => {
+        const loadInitialData = async () => {
+          try {
+            const savedNotes = await storage.getItem('quiet_journal_notes');
+            const savedExperiments = await storage.getItem('quiet_journal_experiments');
+            const savedTheme = await storage.getItem('quiet_journal_theme');
+            const savedView = await storage.getItem('quiet_journal_view');
+            const savedActiveNote = await storage.getItem('quiet_journal_active_note_id');
+
+            if (savedNotes) {
+              setNotes(JSON.parse(savedNotes));
+            } else {
+              setNotes([getWelcomeNote()]);
+            }
+
+            if (savedExperiments) {
+              setExperiments(JSON.parse(savedExperiments));
+            } else {
+              setExperiments([getDefaultExperiment()]);
+            }
+
+            if (savedTheme) {
+              setTheme(savedTheme);
+              document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
+            if (savedView) {
+              setView(savedView);
+            }
+
+            if (savedActiveNote) {
+              setActiveNoteId(savedActiveNote);
+            }
+          } catch (err) {
+            console.error("Failed to load initial data", err);
+            setError("Storage read failed. Running with local fallback data.");
+          } finally {
+            setIsLoading(false);
+            const loadEl = document.getElementById('loading');
+            if (loadEl) loadEl.style.display = 'none';
+          }
+        };
+
+        loadInitialData();
+      }, []);
+
+      // 2. Auto-save
+      useEffect(() => {
+        if (isLoading) return;
+
+        const saveTimeout = setTimeout(async () => {
+          try {
+            setIsSaving(true);
+            await storage.setItem('quiet_journal_notes', JSON.stringify(notes));
+            await storage.setItem('quiet_journal_experiments', JSON.stringify(experiments));
+            await storage.setItem('quiet_journal_theme', theme);
+            await storage.setItem('quiet_journal_view', view);
+            if (activeNoteId) {
+              await storage.setItem('quiet_journal_active_note_id', activeNoteId);
+            } else {
+              await storage.setItem('quiet_journal_active_note_id', '');
+            }
+          } catch (err) {
+            console.error("Auto-save failed", err);
+          } finally {
+            setTimeout(() => setIsSaving(false), 250);
+          }
+        }, 600);
+
+        return () => clearTimeout(saveTimeout);
+      }, [notes, experiments, theme, view, activeNoteId, isLoading]);
+
+      // Helper: get note title
+      const getNoteTitle = (content) => {
+        if (!content) return "Untitled Note";
+        const firstLine = content.split('\n')[0].trim();
+        return firstLine || "Untitled Note";
+      };
+
+      // Helper: get note meta
+      const getNoteMeta = (content) => {
+        if (!content) return "No content";
+        const lines = content.split('\n');
+        const pagesLine = lines.find(l => l.trim().startsWith('Pages:'));
+        if (pagesLine) return pagesLine.trim();
+        
+        const words = content.trim().split(/\s+/).length;
+        return `${words} words`;
+      };
+
+      // Handler: Theme
+      const toggleTheme = () => {
+        const nextTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(nextTheme);
+        document.documentElement.setAttribute('data-theme', nextTheme);
+      };
+
+      // Handler: Create Note with custom starting templates
+      const handleCreateNote = (templateKey = 'chapter') => {
+        const initialContent = templateKey === 'chapter' 
+          ? Templates.chapter(getTodayDateString()) 
+          : templateKey === 'habitLoop' 
+            ? Templates.habitLoop() 
+            : Templates.frictionCanvas();
+
+        const newNote = {
+          id: `note-${Date.now()}`,
+          content: initialContent,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setNotes([newNote, ...notes]);
+        setActiveNoteId(newNote.id);
+        setView('journal');
+        setEditorMode('edit');
+        setMobileSidebarActive(false);
+      };
+
+      // Handler: Edit text content
+      const handleEditNoteText = (newText) => {
+        setNotes(prevNotes => prevNotes.map(n => {
+          if (n.id === activeNoteId) {
+            return {
+              ...n,
+              content: newText,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return n;
+        }));
+      };
+
+      // Handler: Insert text at cursor location in textarea
+      const insertTextAtCursor = (textToInsert) => {
+        const textarea = textareaRef.current;
+        const activeNote = notes.find(n => n.id === activeNoteId);
+        if (!activeNote) return;
+
+        if (!textarea) {
+          handleEditNoteText(activeNote.content + "\n\n" + textToInsert);
+          return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentText = activeNote.content;
+        const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+
+        handleEditNoteText(newText);
+
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + textToInsert.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 50);
+      };
+
+      // Add a daily entries block
+      const handleAddDailyEntry = () => {
+        const note = notes.find(n => n.id === activeNoteId);
+        if (!note) return;
+
+        const todayStr = getTodayDateString();
+        const dailyBlock = `📅 ${todayStr} — pages [X–Y]
+💡 Key Insight: "What clicked."
+🎯 Identity Shift: "If true, I'd..."
+📝 One-line:
+`;
+        
+        const delimiter = "━━━ DAILY ENTRIES ━━━";
+        const text = note.content;
+        const index = text.indexOf(delimiter);
+        let updatedContent = "";
+
+        if (index !== -1) {
+          const insertPos = index + delimiter.length;
+          updatedContent = text.slice(0, insertPos) + "\n" + dailyBlock + text.slice(insertPos);
+        } else {
+          updatedContent = text + "\n\n" + delimiter + "\n" + dailyBlock;
+        }
+
+        handleEditNoteText(updatedContent);
+        setEditorMode('edit');
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            const pos = updatedContent.indexOf(todayStr) + todayStr.length + 11;
+            textareaRef.current.setSelectionRange(pos, pos);
+          }
+        }, 50);
+      };
+
+      const handleDeleteNote = (id, e) => {
+        e.stopPropagation();
+        setNotes(notes.filter(n => n.id !== id));
+        if (activeNoteId === id) {
+          setActiveNoteId(null);
+        }
+        setDeleteConfirmId(null);
+      };
+
+      // --- EXPERIMENT TRACKER ---
+      const handleCreateExperiment = () => {
+        const newExp = {
+          id: `exp-${Date.now()}`,
+          title: "New Habit Experiment",
+          laws: { obvious: false, attractive: false, easy: false, satisfying: false },
+          days: [false, false, false, false, false, false, false],
+          createdAt: new Date().toISOString()
+        };
+        setExperiments([newExp, ...experiments]);
+      };
+
+      const handleUpdateExperimentTitle = (id, newTitle) => {
+        setExperiments(prev => prev.map(exp => exp.id === id ? { ...exp, title: newTitle } : exp));
+      };
+
+      const handleToggleLaw = (id, lawKey) => {
+        setExperiments(prev => prev.map(exp => exp.id === id ? {
+          ...exp,
+          laws: { ...exp.laws, [lawKey]: !exp.laws[lawKey] }
+        } : exp));
+      };
+
+      const handleToggleDay = (id, dayIndex) => {
+        setExperiments(prev => prev.map(exp => {
+          if (exp.id === id) {
+            const nextDays = [...exp.days];
+            nextDays[dayIndex] = !nextDays[dayIndex];
+            return { ...exp, days: nextDays };
+          }
+          return exp;
+        }));
+      };
+
+      const handleDeleteExperiment = (id) => {
+        setExperiments(experiments.filter(exp => exp.id !== id));
+      };
+
+      const handleResetExperiment = (id) => {
+        setExperiments(prev => prev.map(exp => exp.id === id ? {
+          ...exp,
+          days: [false, false, false, false, false, false, false]
+        } : exp));
+      };
+
+      const calculateStreak = (days) => {
+        let maxStreak = 0;
+        let current = 0;
+        for (let day of days) {
+          if (day) {
+            current++;
+            if (current > maxStreak) maxStreak = current;
+          } else {
+            current = 0;
+          }
+        }
+        return maxStreak;
+      };
+
+      const filteredNotes = notes.filter(n => {
+        const query = searchQuery.toLowerCase();
+        return n.content.toLowerCase().includes(query) || getNoteTitle(n.content).toLowerCase().includes(query);
+      });
+
+      const activeNote = notes.find(n => n.id === activeNoteId);
+
+      // Custom HTML Preview Renderer
+      const renderPreview = (content) => {
+        if (!content) return null;
+        const lines = content.split('\n');
+        
+        return lines.map((line, idx) => {
+          const trimmed = line.trim();
+          
+          // Section dividers
+          if (trimmed.includes('━━━ DAILY ENTRIES ━━━') || 
+              trimmed.includes('━━━ CHAPTER WRAP ━━━') || 
+              trimmed.includes('━━━ IDENTITY STATEMENT ━━━') || 
+              trimmed.includes('━━━ SYSTEM EVALUATION ━━━') ||
+              trimmed.includes('━━━ HABIT DESIGN CANVASES ━━━')) {
+            return (
+              <div key={idx} className="preview-divider secondary">
+                <span>{trimmed.replace(/━/g, '').trim()}</span>
+              </div>
+            );
+          }
+          
+          // Main chapter title
+          if (trimmed.startsWith('📖')) {
+            return <h2 key={idx} className="preview-chapter-title">{trimmed}</h2>;
+          }
+          
+          // Page metadata
+          if (trimmed.startsWith('Pages:')) {
+            return <div key={idx} className="preview-meta">{trimmed}</div>;
+          }
+          
+          // Bullet point lists
+          if (trimmed.startsWith('•') || trimmed.startsWith('*')) {
+            return <li key={idx} className="preview-bullet">{trimmed.substring(1).trim()}</li>;
+          }
+          if (/^\d+\./.test(trimmed)) {
+            return <li key={idx} className="preview-ordered">{trimmed.replace(/^\d+\./, '').trim()}</li>;
+          }
+
+          // Identity Elements
+          if (trimmed.startsWith('👤 Identity Goal:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#7b1fa2', backgroundColor: 'var(--bg-sidebar)' }}>
+                <span className="block-emoji">👤</span>
+                <div className="block-content">
+                  <strong>Identity Goal:</strong>
+                  <div>{trimmed.replace('👤 Identity Goal:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🌱 System Change:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#2e7d32', backgroundColor: 'var(--bg-sidebar)' }}>
+                <span className="block-emoji">🌱</span>
+                <div className="block-content">
+                  <strong>System Change:</strong>
+                  <div>{trimmed.replace('🌱 System Change:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          // System evaluations
+          if (trimmed.startsWith('🔍 Current Cue:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#0288d1' }}>
+                <span className="block-emoji">🔍</span>
+                <div className="block-content">
+                  <strong>Current Cue:</strong>
+                  <div>{trimmed.replace('🔍 Current Cue:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🚧 Friction Level:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#f57c00' }}>
+                <span className="block-emoji">🚧</span>
+                <div className="block-content">
+                  <strong>Friction Level:</strong>
+                  <div>{trimmed.replace('🚧 Friction Level:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('⚡ 1% Habit Action:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#afb42b', backgroundColor: 'var(--accent-soft)' }}>
+                <span className="block-emoji">⚡</span>
+                <div className="block-content">
+                  <strong>1% Habit Action:</strong>
+                  <div>{trimmed.replace('⚡ 1% Habit Action:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          // Standard Habit Blockquotes
+          if (trimmed.startsWith('💡 Key Insight:') || trimmed.startsWith('💡 What hit me:')) {
+            const cleanText = trimmed.replace('💡 Key Insight:', '').replace('💡 What hit me:', '').trim();
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: 'var(--accent-color)' }}>
+                <span className="block-emoji">💡</span>
+                <div className="block-content">
+                  <strong>Key Insight:</strong>
+                  <div>{cleanText || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🎯 Identity Shift:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#ab47bc' }}>
+                <span className="block-emoji">🎯</span>
+                <div className="block-content">
+                  <strong>Identity Shift:</strong>
+                  <div>{trimmed.replace('🎯 Identity Shift:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('📝 One-line:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#8d6e63' }}>
+                <span className="block-emoji">📝</span>
+                <div className="block-content">
+                  <strong>One-line Summary:</strong>
+                  <div>{trimmed.replace('📝 One-line:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('❓ Core Question:') || trimmed.startsWith('❓ Question:')) {
+            const cleanText = trimmed.replace('❓ Core Question:', '').replace('❓ Question:', '').trim();
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#4682b4' }}>
+                <span className="block-emoji">❓</span>
+                <div className="block-content">
+                  <strong>Core Question:</strong>
+                  <div>{cleanText || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🔬 Evidence:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#78909c' }}>
+                <span className="block-emoji">🔬</span>
+                <div className="block-content">
+                  <strong>Scientific Evidence / Observations:</strong>
+                  <div>{trimmed.replace('🔬 Evidence:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('✅ Conclusion:')) {
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#2e7d32' }}>
+                <span className="block-emoji">✅</span>
+                <div className="block-content">
+                  <strong>Conclusion:</strong>
+                  <div>{trimmed.replace('✅ Conclusion:', '').trim() || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🛠️ Apply Action:') || trimmed.startsWith('🛠️ Apply:')) {
+            const cleanText = trimmed.replace('🛠️ Apply Action:', '').replace('🛠️ Apply:', '').trim();
+            return (
+              <div key={idx} className="preview-block" style={{ borderLeftColor: '#d2691e' }}>
+                <span className="block-emoji">🛠️</span>
+                <div className="block-content">
+                  <strong>Immediate Application:</strong>
+                  <div>{cleanText || "..."}</div>
+                </div>
+              </div>
+            );
+          }
+
+          // Loop Builder
+          if (trimmed.startsWith('🔄 HABIT LOOP BUILDER')) {
+            return (
+              <div key={idx} className="loop-builder-header">
+                <div className="loop-builder-title">🔄 Habit Loop Builder</div>
+              </div>
+            );
+          }
+          if (trimmed.startsWith('Habit Title:')) {
+            return (
+              <div key={idx} className="loop-builder-meta-row" style={{ backgroundColor: 'var(--bg-sidebar)', padding: '12px 18px 6px 18px', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', fontWeight: '600' }}>
+                {trimmed}
+              </div>
+            );
+          }
+          if (trimmed.startsWith('Action Type:')) {
+            return (
+              <div key={idx} className="loop-builder-meta-row" style={{ backgroundColor: 'var(--bg-sidebar)', padding: '0 18px 12px 18px', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', borderRadius: '0 0 8px 8px', marginBottom: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                {trimmed}
+              </div>
+            );
+          }
+
+          if (trimmed === '1. MAKE IT OBVIOUS (Cue)') {
+            return (
+              <div key={idx} className="loop-step-header" style={{ color: '#0288d1', marginTop: '16px' }}>
+                <span className="step-badge" style={{ backgroundColor: 'rgba(2, 136, 209, 0.1)', color: '#0288d1' }}>CUE</span>
+                <span>1. Make it Obvious</span>
+              </div>
+            );
+          }
+          if (trimmed === '2. MAKE IT ATTRACTIVE (Craving)') {
+            return (
+              <div key={idx} className="loop-step-header" style={{ color: '#d32f2f', marginTop: '16px' }}>
+                <span className="step-badge" style={{ backgroundColor: 'rgba(211, 47, 47, 0.1)', color: '#d32f2f' }}>CRAVING</span>
+                <span>2. Make it Attractive</span>
+              </div>
+            );
+          }
+          if (trimmed === '3. MAKE IT EASY (Response)') {
+            return (
+              <div key={idx} className="loop-step-header" style={{ color: '#388e3c', marginTop: '16px' }}>
+                <span className="step-badge" style={{ backgroundColor: 'rgba(56, 142, 60, 0.1)', color: '#388e3c' }}>RESPONSE</span>
+                <span>3. Make it Easy</span>
+              </div>
+            );
+          }
+          if (trimmed === '4. MAKE IT SATISFYING (Reward)') {
+            return (
+              <div key={idx} className="loop-step-header" style={{ color: '#f57c00', marginTop: '16px' }}>
+                <span className="step-badge" style={{ backgroundColor: 'rgba(245, 124, 0, 0.1)', color: '#f57c00' }}>REWARD</span>
+                <span>4. Make it Satisfying</span>
+              </div>
+            );
+          }
+
+          // Environmental Canvas
+          if (trimmed.startsWith('🎨 ENVIRONMENTAL DESIGN CANVAS')) {
+            return (
+              <div key={idx} className="loop-builder-header" style={{ background: 'linear-gradient(135deg, #8d6e63, #5d4037)' }}>
+                <div className="loop-builder-title">🎨 Environmental Design Canvas</div>
+              </div>
+            );
+          }
+          if (trimmed.startsWith('Target Habit:') || trimmed.startsWith('Goal:')) {
+            const isGoal = trimmed.startsWith('Goal:');
+            return (
+              <div key={idx} className="loop-builder-meta-row" style={{ backgroundColor: 'var(--bg-sidebar)', padding: isGoal ? '0 18px 12px 18px' : '12px 18px 6px 18px', borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: isGoal ? '1px solid var(--border-color)' : 'none', borderRadius: isGoal ? '0 0 8px 8px' : '0', marginBottom: isGoal ? '16px' : '0', fontSize: isGoal ? '0.85rem' : '0.95rem', color: isGoal ? 'var(--text-secondary)' : 'var(--text-primary)', fontWeight: isGoal ? '400' : '600' }}>
+                {trimmed}
+              </div>
+            );
+          }
+
+          if (trimmed.startsWith('🔴 OUT OF SIGHT') || trimmed.startsWith('🔴 SCALE UP FRICTION')) {
+            return (
+              <div key={idx} className="canvas-block danger" style={{ marginTop: '12px' }}>
+                <strong>{trimmed}</strong>
+              </div>
+            );
+          }
+          if (trimmed.startsWith('🟢 MAKE IT SCREAMINGLY OBVIOUS') || trimmed.startsWith('🟢 PREP THE ENVIRONMENT')) {
+            return (
+              <div key={idx} className="canvas-block success" style={{ marginTop: '12px' }}>
+                <strong>{trimmed}</strong>
+              </div>
+            );
+          }
+
+          if (trimmed === '') {
+            return <div key={idx} className="preview-space" />;
+          }
+
+          return <p key={idx} className="preview-text">{line}</p>;
+        });
+      };
+
+      return (
+        <div className="app-container">
+          
+          {/* Sidebar */}
+          <aside className={`sidebar ${mobileSidebarActive ? 'active' : ''}`}>
+            
+            <div className="sidebar-header">
+              
+              <div className="brand-section">
+                <div className="brand-title">
+                  <Logo size={24} className="app-logo" />
+                  <span>Quiet Journal</span>
+                </div>
+                
+                <button 
+                  onClick={toggleTheme} 
+                  className="theme-toggle-btn"
+                  title="Toggle Light/Dark Theme"
+                >
+                  {theme === 'light' ? <Icons.Moon /> : <Icons.Sun />}
+                </button>
+              </div>
+
+              {/* View Nav selector */}
+              <div className="nav-toggle-group">
+                <button 
+                  className={`nav-tab ${view === 'journal' ? 'active' : ''}`}
+                  onClick={() => { setView('journal'); setMobileSidebarActive(true); }}
+                >
+                  Journal ({notes.length})
+                </button>
+                <button 
+                  className={`nav-tab ${view === 'experiments' ? 'active' : ''}`}
+                  onClick={() => { setView('experiments'); setMobileSidebarActive(false); }}
+                >
+                  Experiments ({experiments.length})
+                </button>
+              </div>
+
+              {view === 'journal' && (
+                <div className="search-box-container">
+                  <span className="search-icon"><Icons.Search /></span>
+                  <input 
+                    type="text" 
+                    placeholder="Search notes..." 
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar actions */}
+            {view === 'journal' && (
+              <div className="action-row">
+                <button className="btn-primary" onClick={() => handleCreateNote('chapter')} style={{ marginBottom: '6px' }}>
+                  <Icons.Plus />
+                  <span>New Chapter Note</span>
+                </button>
+                
+                <div className="template-quick-actions">
+                  <button className="btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.74rem' }} onClick={() => handleCreateNote('habitLoop')}>
+                    <Icons.Plus />
+                    <span>Habit Loop</span>
+                  </button>
+                  <button className="btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.74rem' }} onClick={() => handleCreateNote('frictionCanvas')}>
+                    <Icons.Plus />
+                    <span>Friction Canvas</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Note Item List */}
+            {view === 'journal' && (
+              <div className="note-list">
+                {filteredNotes.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                    No notes matching filter.
+                  </div>
+                ) : (
+                  filteredNotes.map(note => {
+                    const isDeleting = deleteConfirmId === note.id;
+                    return (
+                      <div key={note.id} className="note-item-wrapper">
+                        <button 
+                          className={`note-item ${activeNoteId === note.id ? 'active' : ''}`}
+                          onClick={() => {
+                            setActiveNoteId(note.id);
+                            setMobileSidebarActive(false);
+                          }}
+                        >
+                          <span className="note-item-title">{getNoteTitle(note.content)}</span>
+                          <span className="note-item-meta">{getNoteMeta(note.content)}</span>
+                        </button>
+                        
+                        <button 
+                          className="delete-btn" 
+                          onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(note.id); }}
+                          title="Delete note"
+                        >
+                          <Icons.Trash />
+                        </button>
+
+                        {isDeleting && (
+                          <div className="delete-confirm-overlay">
+                            <span>Delete this note?</span>
+                            <div className="delete-confirm-buttons">
+                              <button className="btn-confirm-yes" onClick={(e) => handleDeleteNote(note.id, e)}>Delete</button>
+                              <button className="btn-confirm-no" onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}>Cancel</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            <div className="sidebar-footer">
+              <div className="sync-status">
+                <div className={`sync-indicator ${isSaving ? 'saving' : ''}`}></div>
+                <span>{isSaving ? 'Saving changes...' : 'All changes saved'}</span>
+              </div>
+              <div>v1.3.0</div>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className={`main-area ${!mobileSidebarActive ? 'active' : ''}`}>
+            
+            {view === 'journal' && (
+              activeNote ? (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                  
+                  {/* Editor Header */}
+                  <header className="editor-header">
+                    <div className="editor-header-left">
+                      <button 
+                        className="mobile-back-btn" 
+                        onClick={() => setMobileSidebarActive(true)}
+                        title="Back to notes list"
+                      >
+                        <Icons.ChevronLeft />
+                      </button>
+                      <span className="note-live-title">{getNoteTitle(activeNote.content)}</span>
+                    </div>
+
+                    <div className="editor-header-right">
+                      <button className="btn-secondary" onClick={handleAddDailyEntry} title="Add dated daily entry block">
+                        <Icons.Plus />
+                        <span>+ Add daily entry</span>
+                      </button>
+
+                      {/* Dropdown template inserts */}
+                      <div style={{ position: 'relative' }}>
+                        <button 
+                          className="btn-secondary" 
+                          onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
+                          title="Insert template block at cursor"
+                        >
+                          <span>📋 Insert Template</span>
+                        </button>
+                        {templateMenuOpen && (
+                          <div className="template-dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                            <button className="dropdown-item" onClick={() => { insertTextAtCursor(Templates.chapter(getTodayDateString())); setTemplateMenuOpen(false); }}>
+                              <span className="dropdown-item-title">📖 Reading Notes</span>
+                              <span className="dropdown-item-desc">Chapter review layout</span>
+                            </button>
+                            <button className="dropdown-item" onClick={() => { insertTextAtCursor(Templates.habitLoop()); setTemplateMenuOpen(false); }}>
+                              <span className="dropdown-item-title">🔄 Habit Loop Builder</span>
+                              <span className="dropdown-item-desc">Cue, Craving, Response, Reward</span>
+                            </button>
+                            <button className="dropdown-item" onClick={() => { insertTextAtCursor(Templates.frictionCanvas()); setTemplateMenuOpen(false); }}>
+                              <span className="dropdown-item-title">🎨 Environmental Canvas</span>
+                              <span className="dropdown-item-desc">Increase/Decrease friction</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Edit vs Preview Toggle */}
+                      <div className="toggle-preview-group">
+                        <button 
+                          className={`btn-toggle-mode ${editorMode === 'edit' ? 'active' : ''}`}
+                          onClick={() => setEditorMode('edit')}
+                        >
+                          <Icons.Edit />
+                          <span style={{ marginLeft: '4px' }}>Edit</span>
+                        </button>
+                        <button 
+                          className={`btn-toggle-mode ${editorMode === 'preview' ? 'active' : ''}`}
+                          onClick={() => setEditorMode('preview')}
+                        >
+                          <Icons.Eye />
+                          <span style={{ marginLeft: '4px' }}>Preview</span>
+                        </button>
+                      </div>
+                    </div>
+                  </header>
+
+                  {/* Body Editor Panel */}
+                  <div className="editor-body">
+                    <div className="editor-body-inner">
+                      {editorMode === 'edit' ? (
+                        <textarea
+                          ref={textareaRef}
+                          className="journal-textarea"
+                          value={activeNote.content}
+                          onChange={(e) => handleEditNoteText(e.target.value)}
+                          placeholder="Write, paste, or insert a habit design template..."
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="preview-container">
+                          {renderPreview(activeNote.content)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="blank-slate">
+                  <div className="logo-illustration-wrapper">
+                    <Logo size={72} />
+                  </div>
+                  <h3 className="blank-slate-title">Quiet Journal</h3>
+                  <p className="blank-slate-desc">Select a note or create one using our Atomic Habits templates to begin your system design.</p>
+                  <button className="btn-primary" style={{ marginTop: '8px', width: 'auto' }} onClick={() => handleCreateNote('chapter')}>
+                    <Icons.Plus />
+                    <span>Create a Note</span>
+                  </button>
+                </div>
+              )
+            )}
+
+            {/* View 2: Experiment Tracker View */}
+            {view === 'experiments' && (
+              <div className="experiments-container">
+                <div className="experiments-inner">
+                  
+                  <div className="experiments-header">
+                    <div className="experiments-title-area">
+                      <h1>Habit Experiments</h1>
+                      <p>Run 7-day sprints implementing micro-habits through structural environmental tweaks.</p>
+                    </div>
+                    <button className="btn-primary" onClick={handleCreateExperiment} style={{ width: 'auto' }}>
+                      <Icons.Plus />
+                      <span>New Experiment</span>
+                    </button>
+                  </div>
+
+                  <div className="experiments-list">
+                    {experiments.length === 0 ? (
+                      <div className="blank-slate" style={{ backgroundColor: 'var(--bg-sidebar)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                        <div className="logo-illustration-wrapper">
+                          <Logo size={56} />
+                        </div>
+                        <h3 className="blank-slate-title">No experiments currently active</h3>
+                        <p className="blank-slate-desc">Track a habit here! Connect the 4 Laws of Habit loop and run a 7-day challenge.</p>
+                        <button className="btn-primary" onClick={handleCreateExperiment} style={{ width: 'auto' }}>
+                          <Icons.Plus />
+                          <span>Create Experiment</span>
+                        </button>
+                      </div>
+                    ) : (
+                      experiments.map(exp => {
+                        const maxStreak = calculateStreak(exp.days);
+                        const checkedCount = exp.days.filter(Boolean).length;
+                        const isCompleted = checkedCount === 7;
+                        
+                        return (
+                          <div key={exp.id} className="experiment-card">
+                            
+                            <div className="experiment-card-header">
+                              <input 
+                                type="text"
+                                className="experiment-title-input"
+                                value={exp.title}
+                                onChange={(e) => handleUpdateExperimentTitle(exp.id, e.target.value)}
+                                placeholder="E.g., Read 10 pages before sleep..."
+                              />
+                              <div className="card-actions">
+                                <button 
+                                  className="btn-icon-danger" 
+                                  onClick={() => handleDeleteExperiment(exp.id)}
+                                  title="Delete experiment"
+                                >
+                                  <Icons.Trash />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 4 Laws Checklist */}
+                            <div className="laws-grid">
+                              <button 
+                                className={`law-toggle ${exp.laws.obvious ? 'active' : ''}`}
+                                onClick={() => handleToggleLaw(exp.id, 'obvious')}
+                                title="Law 1: Design clear cues in your environment"
+                              >
+                                <span className="law-dot"></span>
+                                <span>Obvious</span>
+                              </button>
+                              
+                              <button 
+                                className={`law-toggle ${exp.laws.attractive ? 'active' : ''}`}
+                                onClick={() => handleToggleLaw(exp.id, 'attractive')}
+                                title="Law 2: Bundle habits or align with social cues"
+                              >
+                                <span className="law-dot"></span>
+                                <span>Attractive</span>
+                              </button>
+                              
+                              <button 
+                                className={`law-toggle ${exp.laws.easy ? 'active' : ''}`}
+                                onClick={() => handleToggleLaw(exp.id, 'easy')}
+                                title="Law 3: Scale down to 2 mins to reduce friction"
+                              >
+                                <span className="law-dot"></span>
+                                <span>Easy</span>
+                              </button>
+                              
+                              <button 
+                                className={`law-toggle ${exp.laws.satisfying ? 'active' : ''}`}
+                                onClick={() => handleToggleLaw(exp.id, 'satisfying')}
+                                title="Law 4: Set up immediate rewards or track progress"
+                              >
+                                <span className="law-dot"></span>
+                                <span>Satisfying</span>
+                              </button>
+                            </div>
+
+                            {/* 7-Day Checklist progress */}
+                            <div className="tracker-days-section">
+                              <div className="tracker-days-label">7-DAY REFLECTION CHALLENGE</div>
+                              <div className="tracker-days-row">
+                                {exp.days.map((checked, dayIdx) => (
+                                  <div 
+                                    key={dayIdx}
+                                    className={`day-box ${checked ? 'checked' : ''}`}
+                                    onClick={() => handleToggleDay(exp.id, dayIdx)}
+                                    title={`Toggle Day ${dayIdx + 1}`}
+                                  >
+                                    <span className="day-number">D{dayIdx + 1}</span>
+                                    <span className="day-checkmark">✓</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Streak count and completeness indicator */}
+                            <div className="experiment-card-footer">
+                              <div className="streak-container">
+                                <span className="streak-fire-icon">🔥</span>
+                                <span>Current Streak: <strong>{maxStreak} days</strong></span>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {isCompleted ? (
+                                  <div className="congrats-badge">
+                                    <span>🎉 Habit Formed!</span>
+                                  </div>
+                                ) : (
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    Progress: {checkedCount}/7 days
+                                  </span>
+                                )}
+
+                                <div className="completion-bar-container">
+                                  <div 
+                                    className="completion-bar-fill"
+                                    style={{ width: `${(checkedCount / 7) * 100}%` }}
+                                  />
+                                </div>
+
+                                <button 
+                                  onClick={() => handleResetExperiment(exp.id)}
+                                  style={{
+                                    fontSize: '0.74rem',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'var(--bg-primary)',
+                                    color: 'var(--text-secondary)',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    marginLeft: '8px'
+                                  }}
+                                  title="Reset checkboxes"
+                                >
+                                  Reset
+                                </button>
+                              </div>
+                            </div>
+
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+          </main>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
