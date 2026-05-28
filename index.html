@@ -2411,6 +2411,86 @@ Action Type: Build Good Habit
         return `${words} words`;
       };
 
+      // Handler: Export Notes and Experiments as a JSON file
+      const handleExportData = () => {
+        try {
+          const exportPayload = {
+            version: "1.5.0",
+            notes,
+            experiments
+          };
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.setAttribute("href", dataStr);
+          downloadAnchor.setAttribute("download", `quiet_journal_backup_${new Date().toISOString().slice(0, 10)}.json`);
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          downloadAnchor.remove();
+        } catch (e) {
+          console.error("Failed to export backup data", e);
+          alert("Failed to export backup data: " + e.message);
+        }
+      };
+
+      // Handler: Import Notes and Experiments from a JSON file
+      const handleImportData = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedData = JSON.parse(e.target.result);
+            if (!importedData || (!Array.isArray(importedData.notes) && !Array.isArray(importedData.experiments))) {
+              throw new Error("Invalid backup file structure. Must contain notes and/or experiments.");
+            }
+
+            const confirmed = window.confirm("Are you sure you want to import this backup? This will merge imported items with your current notes and experiments.");
+            if (!confirmed) return;
+
+            // Merge notes safely by matching IDs
+            let mergedNotes = [...notes];
+            if (Array.isArray(importedData.notes)) {
+              importedData.notes.forEach(importedNote => {
+                const existingIdx = mergedNotes.findIndex(n => n.id === importedNote.id);
+                if (existingIdx !== -1) {
+                  const existingDate = new Date(mergedNotes[existingIdx].updatedAt || 0);
+                  const importedDate = new Date(importedNote.updatedAt || 0);
+                  if (importedDate > existingDate) {
+                    mergedNotes[existingIdx] = importedNote;
+                  }
+                } else {
+                  mergedNotes.push(importedNote);
+                }
+              });
+            }
+
+            // Merge experiments safely
+            let mergedExperiments = [...experiments];
+            if (Array.isArray(importedData.experiments)) {
+              importedData.experiments.forEach(importedExp => {
+                const existingIdx = mergedExperiments.findIndex(exp => exp.id === importedExp.id);
+                if (existingIdx !== -1) {
+                  mergedExperiments[existingIdx] = importedExp;
+                } else {
+                  mergedExperiments.push(importedExp);
+                }
+              });
+            }
+
+            setNotes(mergedNotes);
+            setExperiments(mergedExperiments);
+            alert("Backup imported successfully! Your notes and experiments have been synchronized.");
+          } catch (err) {
+            console.error("Backup import failed", err);
+            alert("Failed to import backup: " + err.message);
+          }
+          // Reset file input value so same file can be imported again if needed
+          event.target.value = "";
+        };
+        reader.readAsText(file);
+      };
+
       // Handler: Theme
       const toggleTheme = () => {
         const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -3084,7 +3164,7 @@ Action Type: Build Good Habit
                 style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }} 
                 title="View Changelog & About"
               >
-                v1.4.0
+                v1.5.0
               </div>
             </div>
           </aside>
@@ -3495,32 +3575,60 @@ Action Type: Build Good Habit
 
           </main>
 
-          {/* Changelog Modal */}
+          {/* Settings & About Modal */}
           {aboutModalOpen && (
             <div className="modal-overlay" onClick={() => setAboutModalOpen(false)}>
               <div className="about-modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="about-modal-header">
-                  <h3>About Quiet Journal</h3>
+                  <h3>Settings & About</h3>
                   <button className="btn-close-modal" onClick={() => setAboutModalOpen(false)}>×</button>
                 </div>
                 <div className="about-modal-body">
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
                     <Logo size={48} />
                     <h4 style={{ marginTop: '8px', fontWeight: '700', fontSize: '1.1rem', color: 'var(--text-primary)' }}>Quiet Journal</h4>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Version 1.4.0</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Version 1.5.0</div>
                   </div>
                   <p style={{ fontSize: '0.86rem', lineHeight: '1.5', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                     Quiet Journal is a reading habit companion designed around the "Atomic Habits" framework by James Clear. It helps you design habit systems, run tracker experiments, and capture chapter insights.
                   </p>
-                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.4.0):</h5>
+
+                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Data Backup & Sync</h5>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>
+                    Sync your journal notes and habit experiments across different profiles or devices. Export your data as a JSON backup file and import it elsewhere to sync.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                    <button 
+                      className="btn-primary" 
+                      onClick={handleExportData}
+                      style={{ flex: '1 1 auto', width: 'auto', padding: '10px 16px', fontSize: '0.82rem' }}
+                    >
+                      📤 Export Backup (JSON)
+                    </button>
+                    
+                    <button 
+                      className="btn-secondary" 
+                      onClick={() => document.getElementById('backup-import-input').click()}
+                      style={{ flex: '1 1 auto', padding: '10px 16px', fontSize: '0.82rem' }}
+                    >
+                      📥 Import Backup (JSON)
+                    </button>
+                    <input 
+                      id="backup-import-input" 
+                      type="file" 
+                      accept=".json" 
+                      onChange={handleImportData} 
+                      style={{ display: 'none' }} 
+                    />
+                  </div>
+
+                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.5.0):</h5>
                   <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '1.6' }}>
-                    <li>✨ <strong>Notion-style Metadata Editor</strong>: Template fields are now structured inputs instead of raw plain-text.</li>
-                    <li>📝 <strong>Formatting Toolbar</strong>: Quick buttons for bold, italic, lists, dividers, and Atomic blocks.</li>
-                    <li>👁️ <strong>Inline Markdown Preview</strong>: Bold (`**`) and italic (`*`) text render correctly in Preview cards.</li>
-                    <li>📱 <strong>Improved Mobile Responsiveness</strong>: Sidebar collapses on tablets (≤ 992px) with a close button and hamburger drawer.</li>
-                    <li>🔍 <strong>Live Search Term Highlighting</strong>: Matching queries glow in the sidebar notes list.</li>
-                    <li>🎉 <strong>Empty Workspace Onboarding</strong>: Welcoming checklist screens for first-time users.</li>
-                    <li>🔥 <strong>Satisfying Click Pop Animations</strong>: Tracker day cells react visually when checked.</li>
+                    <li>💾 <strong>Manual Data Backup & Restore</strong>: Export notes and streaks to a JSON file and import them to sync across browsers/profiles.</li>
+                    <li>⚡ <strong>State Partitioning (Typing Speedup)</strong>: Isolated editor state to eliminate keystroke delays and prevent root re-renders.</li>
+                    <li>⏳ <strong>Non-blocking Disk Writes</strong>: Defer localStorage writes using requestIdleCallback to reduce input blocking time.</li>
+                    <li>🎯 <strong>Precise Toolbar Selection</strong>: Applying bold or italic now keeps your selected text focused and highlighted.</li>
+                    <li>🚀 <strong>Non-blocking Script Loading</strong>: Deferred React/Babel resources to enable instantaneous Loading Screen rendering.</li>
                   </ul>
                 </div>
               </div>
