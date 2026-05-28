@@ -1469,6 +1469,62 @@
       border-radius: 2px;
       padding: 0 2px;
     }
+
+    /* ===== Live split-screen editor (Solution A) ===== */
+    .editor-body-inner.split-mode {
+      max-width: 1180px;
+    }
+
+    .editor-split {
+      display: flex;
+      flex: 1;
+      gap: 24px;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .editor-split-pane {
+      flex: 1 1 50%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-input-pane {
+      overflow: hidden;
+    }
+
+    .editor-input-pane .editor-structured-container,
+    .editor-input-pane > .journal-textarea {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .editor-preview-pane {
+      overflow-y: auto;
+      border-left: 1px solid var(--border-color);
+      padding-left: 24px;
+    }
+
+    .editor-preview-pane .preview-container {
+      padding-bottom: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .editor-body { align-items: flex-start; }
+      .editor-body-inner.split-mode { max-width: 680px; height: auto; }
+      .editor-split { flex-direction: column; }
+      .editor-split-pane { flex: none; }
+      .editor-input-pane { overflow: visible; min-height: 320px; }
+      .editor-preview-pane {
+        overflow-y: visible;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        padding-left: 0;
+        padding-top: 16px;
+        margin-top: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1882,7 +1938,7 @@ Action Type: Build Good Habit
     };
 
     // NoteEditor Component for State Partitioning (Typing Performance)
-    const NoteEditor = ({ activeNote, onSave, textareaRef, selectionRangeRef }) => {
+    const NoteEditor = ({ activeNote, onSave, textareaRef, selectionRangeRef, renderPreview }) => {
       const [localContent, setLocalContent] = useState(activeNote.content);
       const lastActiveNoteIdRef = useRef(activeNote.id);
       const pendingSelectionRef = useRef(null);
@@ -2088,6 +2144,7 @@ Action Type: Build Good Habit
         </div>
       );
 
+      const editorInput = (() => {
       if (noteType === 'chapter') {
         const { chapterNum, chapterTitle, pages, started, restContent } = parseChapterHeader(localContent);
         return (
@@ -2292,6 +2349,22 @@ Action Type: Build Good Habit
           </React.Fragment>
         );
       }
+      })();
+
+      return (
+        <React.Fragment>
+          <div className="editor-split">
+            <div className="editor-split-pane editor-input-pane">
+              {editorInput}
+            </div>
+            <div className="editor-split-pane editor-preview-pane">
+              <div className="preview-container">
+                {renderPreview(localContent)}
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      );
     };
 
     function App() {
@@ -3308,13 +3381,14 @@ Action Type: Build Good Habit
 
                   {/* Body Editor Panel */}
                   <div className="editor-body">
-                    <div className="editor-body-inner">
+                    <div className={`editor-body-inner ${editorMode === 'edit' ? 'split-mode' : ''}`}>
                       {editorMode === 'edit' ? (
                         <NoteEditor 
                           activeNote={activeNote} 
                           onSave={handleEditNoteText} 
                           textareaRef={textareaRef} 
                           selectionRangeRef={selectionRangeRef}
+                          renderPreview={renderPreview}
                         />
                       ) : (
                         <div className="preview-container">
