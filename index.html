@@ -1461,6 +1461,14 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
+
+    .search-highlight {
+      background-color: var(--accent-soft);
+      color: var(--accent-color);
+      font-weight: 600;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
   </style>
 </head>
 <body>
@@ -1476,9 +1484,9 @@
   </div>
 
   <!-- React & Babel Scripts -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin defer></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin defer></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin defer></script>
 
   <!-- React Code Component -->
   <script type="text/babel">
@@ -1509,7 +1517,18 @@
           }
         }
         if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(key, value);
+          const performWrite = () => {
+            try {
+              window.localStorage.setItem(key, value);
+            } catch (e) {
+              console.error("localStorage write error", e);
+            }
+          };
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(() => performWrite(), { timeout: 1000 });
+          } else {
+            setTimeout(performWrite, 0);
+          }
         }
       }
     };
@@ -1724,6 +1743,362 @@ Action Type: Build Good Habit
       Close: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       )
+    };
+
+    // Helper: Detect note template type
+    const getNoteType = (content) => {
+      if (!content) return 'standard';
+      const firstLine = content.split('\n')[0].trim();
+      if (firstLine.startsWith('📖 Ch') || (content.includes('Pages:') && content.includes('Started:'))) {
+        return 'chapter';
+      }
+      if (firstLine.includes('🔄 HABIT LOOP BUILDER') || content.includes('Action Type:')) {
+        return 'habitLoop';
+      }
+      if (firstLine.includes('🎨 ENVIRONMENTAL DESIGN CANVAS') || (content.includes('Target Habit:') && content.includes('Goal:'))) {
+        return 'friction';
+      }
+      return 'standard';
+    };
+
+    // Helper: Parse Chapter Notes Header
+    const parseChapterHeader = (content) => {
+      const lines = content.split('\n');
+      const line1 = lines[0] || '';
+      const line2 = lines[1] || '';
+      const restContent = lines.slice(2).join('\n');
+
+      let chapterNum = '';
+      let chapterTitle = '';
+      const chMatch = line1.match(/📖\s*Ch\s*([^:]+):\s*(.*)/i);
+      if (chMatch) {
+        chapterNum = chMatch[1].trim();
+        chapterTitle = chMatch[2].trim();
+      } else {
+        chapterTitle = line1.replace('📖', '').trim();
+      }
+
+      let pages = '';
+      let started = '';
+      const pMatch = line2.match(/Pages:\s*([^|]+)\|\s*Started:\s*(.*)/i);
+      if (pMatch) {
+        pages = pMatch[1].trim();
+        started = pMatch[2].trim();
+      } else {
+        const pOnly = line2.match(/Pages:\s*(.*)/i);
+        if (pOnly) {
+          pages = pOnly[1].trim();
+        }
+      }
+
+      return { chapterNum, chapterTitle, pages, started, restContent };
+    };
+
+    // Helper: Update Chapter Notes Header
+    const updateChapterHeader = (chapterNum, chapterTitle, pages, started, restContent) => {
+      const line1 = `📖 Ch ${chapterNum || '#'}: ${chapterTitle || '[Chapter Title]'}`;
+      const line2 = `Pages: ${pages || '[X–Y]'} | Started: ${started || ''}`;
+      return `${line1}\n${line2}\n${restContent}`;
+    };
+
+    // Helper: Parse Habit Loop Header
+    const parseHabitLoopHeader = (content) => {
+      const lines = content.split('\n');
+      const line1 = lines[0] || '';
+      const line2 = lines[1] || '';
+      const line3 = lines[2] || '';
+      const restContent = lines.slice(3).join('\n');
+
+      let habitTitle = '';
+      if (line2.startsWith('Habit Title:')) {
+        habitTitle = line2.replace('Habit Title:', '').trim();
+      }
+      let actionType = '';
+      if (line3.startsWith('Action Type:')) {
+        actionType = line3.replace('Action Type:', '').trim();
+      }
+
+      return { habitTitle, actionType, restContent };
+    };
+
+    // Helper: Update Habit Loop Header
+    const updateHabitLoopHeader = (habitTitle, actionType, restContent) => {
+      const line1 = `🔄 HABIT LOOP BUILDER`;
+      const line2 = `Habit Title: ${habitTitle || ''}`;
+      const line3 = `Action Type: ${actionType || ''}`;
+      return `${line1}\n${line2}\n${line3}\n${restContent}`;
+    };
+
+    // Helper: Parse Friction Header
+    const parseFrictionHeader = (content) => {
+      const lines = content.split('\n');
+      const line1 = lines[0] || '';
+      const line2 = lines[1] || '';
+      const line3 = lines[2] || '';
+      const restContent = lines.slice(3).join('\n');
+
+      let targetHabit = '';
+      if (line2.startsWith('Target Habit:')) {
+        targetHabit = line2.replace('Target Habit:', '').trim();
+      }
+      let goal = '';
+      if (line3.startsWith('Goal:')) {
+        goal = line3.replace('Goal:', '').trim();
+      }
+
+      return { targetHabit, goal, restContent };
+    };
+
+    // Helper: Update Friction Header
+    const updateFrictionHeader = (targetHabit, goal, restContent) => {
+      const line1 = `🎨 ENVIRONMENTAL DESIGN CANVAS`;
+      const line2 = `Target Habit: ${targetHabit || ''}`;
+      const line3 = `Goal: ${goal || ''}`;
+      return `${line1}\n${line2}\n${line3}\n${restContent}`;
+    };
+
+    // Helper: Live Search Text Highlighting
+    const highlightText = (text, query) => {
+      if (!query || !text) return text;
+      const parts = [];
+      let lastIndex = 0;
+      const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`(${escapedQuery})`, 'gi');
+      let match;
+      
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(text.substring(lastIndex, match.index));
+        }
+        parts.push(<mark key={match.index} className="search-highlight">{match[0]}</mark>);
+        lastIndex = regex.lastIndex;
+      }
+      
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+      
+      return parts.length > 0 ? parts : text;
+    };
+
+    // NoteEditor Component for State Partitioning (Typing Performance)
+    const NoteEditor = ({ activeNote, onSave, textareaRef }) => {
+      const [localContent, setLocalContent] = useState(activeNote.content);
+      const lastActiveNoteIdRef = useRef(activeNote.id);
+
+      // Reset local content if note ID changes
+      if (activeNote.id !== lastActiveNoteIdRef.current) {
+        lastActiveNoteIdRef.current = activeNote.id;
+        setLocalContent(activeNote.content);
+      }
+
+      // Sync local content from parent updates (e.g. daily entry added, formatting toolbar)
+      useEffect(() => {
+        if (activeNote.content !== localContent) {
+          setLocalContent(activeNote.content);
+        }
+      }, [activeNote.content]);
+
+      // Debounce saving of local edits back to parent App component
+      const onSaveRef = useRef(onSave);
+      onSaveRef.current = onSave;
+
+      useEffect(() => {
+        if (localContent === activeNote.content) return;
+
+        const handler = setTimeout(() => {
+          onSaveRef.current(localContent);
+        }, 200);
+
+        return () => clearTimeout(handler);
+      }, [localContent, activeNote.content]);
+
+      const handleLocalChange = (newText) => {
+        setLocalContent(newText);
+      };
+
+      const noteType = getNoteType(localContent);
+
+      if (noteType === 'chapter') {
+        const { chapterNum, chapterTitle, pages, started, restContent } = parseChapterHeader(localContent);
+        return (
+          <div className="editor-structured-container">
+            <div className="meta-inputs-grid">
+              <div className="meta-input-group" style={{ width: '80px' }}>
+                <label className="meta-label">Chapter</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={chapterNum} 
+                  placeholder="e.g. 1"
+                  onChange={(e) => {
+                    const newContent = updateChapterHeader(e.target.value, chapterTitle, pages, started, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+              
+              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                <label className="meta-label">Chapter Title</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={chapterTitle} 
+                  placeholder="The Surprising Power of Atomic Habits"
+                  onChange={(e) => {
+                    const newContent = updateChapterHeader(chapterNum, e.target.value, pages, started, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+              
+              <div className="meta-input-group" style={{ width: '100px' }}>
+                <label className="meta-label">Pages</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={pages} 
+                  placeholder="15-28"
+                  onChange={(e) => {
+                    const newContent = updateChapterHeader(chapterNum, chapterTitle, e.target.value, started, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+              
+              <div className="meta-input-group" style={{ width: '120px' }}>
+                <label className="meta-label">Started</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={started} 
+                  placeholder="05/28/2026"
+                  onChange={(e) => {
+                    const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, e.target.value, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+            </div>
+            <textarea
+              ref={textareaRef}
+              className="journal-textarea"
+              value={restContent}
+              onChange={(e) => {
+                const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
+                handleLocalChange(newContent);
+              }}
+              placeholder="Write your chapter review notes here..."
+              autoFocus
+            />
+          </div>
+        );
+      } else if (noteType === 'habitLoop') {
+        const { habitTitle, actionType, restContent } = parseHabitLoopHeader(localContent);
+        return (
+          <div className="editor-structured-container">
+            <div className="meta-inputs-grid">
+              <div className="meta-input-group" style={{ flex: 1, minWidth: '200px' }}>
+                <label className="meta-label">Habit Title</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={habitTitle} 
+                  placeholder="e.g. Read every night before sleep"
+                  onChange={(e) => {
+                    const newContent = updateHabitLoopHeader(e.target.value, actionType, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+              
+              <div className="meta-input-group" style={{ width: '200px' }}>
+                <label className="meta-label">Action Type</label>
+                <select 
+                  className="meta-input select" 
+                  value={actionType}
+                  onChange={(e) => {
+                    const newContent = updateHabitLoopHeader(habitTitle, e.target.value, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                >
+                  <option value="">Select Action Type</option>
+                  <option value="Build Good Habit">Build Good Habit</option>
+                  <option value="Break Bad Habit">Break Bad Habit</option>
+                </select>
+              </div>
+            </div>
+            <textarea
+              ref={textareaRef}
+              className="journal-textarea"
+              value={restContent}
+              onChange={(e) => {
+                const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
+                handleLocalChange(newContent);
+              }}
+              placeholder="Design the 4 laws of habit loops here..."
+              autoFocus
+            />
+          </div>
+        );
+      } else if (noteType === 'friction') {
+        const { targetHabit, goal, restContent } = parseFrictionHeader(localContent);
+        return (
+          <div className="editor-structured-container">
+            <div className="meta-inputs-grid">
+              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                <label className="meta-label">Target Habit</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={targetHabit} 
+                  placeholder="e.g. Limit morning social media scrolling"
+                  onChange={(e) => {
+                    const newContent = updateFrictionHeader(e.target.value, goal, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+              
+              <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                <label className="meta-label">Goal</label>
+                <input 
+                  type="text" 
+                  className="meta-input" 
+                  value={goal} 
+                  placeholder="e.g. Reduce daily screen time by 30 mins"
+                  onChange={(e) => {
+                    const newContent = updateFrictionHeader(targetHabit, e.target.value, restContent);
+                    handleLocalChange(newContent);
+                  }}
+                />
+              </div>
+            </div>
+            <textarea
+              ref={textareaRef}
+              className="journal-textarea"
+              value={restContent}
+              onChange={(e) => {
+                const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
+                handleLocalChange(newContent);
+              }}
+              placeholder="Define invisible cues, friction canvas here..."
+              autoFocus
+            />
+          </div>
+        );
+      } else {
+        return (
+          <textarea
+            ref={textareaRef}
+            className="journal-textarea"
+            value={localContent}
+            onChange={(e) => handleLocalChange(e.target.value)}
+            placeholder="Write, paste, or insert a habit design template..."
+            autoFocus
+          />
+        );
+      }
     };
 
     function App() {
@@ -2758,189 +3133,11 @@ Action Type: Build Good Habit
                               ⚡ Action
                             </button>
                           </div>
-                          {(() => {
-                            const noteType = getNoteType(activeNote.content);
-                            if (noteType === 'chapter') {
-                              const { chapterNum, chapterTitle, pages, started, restContent } = parseChapterHeader(activeNote.content);
-                              return (
-                                <div className="editor-structured-container">
-                                  <div className="meta-inputs-grid">
-                                    <div className="meta-input-group" style={{ width: '80px' }}>
-                                      <label className="meta-label">Chapter</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={chapterNum} 
-                                        placeholder="e.g. 1"
-                                        onChange={(e) => {
-                                          const newContent = updateChapterHeader(e.target.value, chapterTitle, pages, started, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                                      <label className="meta-label">Chapter Title</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={chapterTitle} 
-                                        placeholder="The Surprising Power of Atomic Habits"
-                                        onChange={(e) => {
-                                          const newContent = updateChapterHeader(chapterNum, e.target.value, pages, started, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="meta-input-group" style={{ width: '100px' }}>
-                                      <label className="meta-label">Pages</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={pages} 
-                                        placeholder="15-28"
-                                        onChange={(e) => {
-                                          const newContent = updateChapterHeader(chapterNum, chapterTitle, e.target.value, started, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="meta-input-group" style={{ width: '120px' }}>
-                                      <label className="meta-label">Started</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={started} 
-                                        placeholder="05/28/2026"
-                                        onChange={(e) => {
-                                          const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, e.target.value, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                  <textarea
-                                    ref={textareaRef}
-                                    className="journal-textarea"
-                                    value={restContent}
-                                    onChange={(e) => {
-                                      const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
-                                      handleEditNoteText(newContent);
-                                    }}
-                                    placeholder="Write your chapter review notes here..."
-                                    autoFocus
-                                  />
-                                </div>
-                              );
-                            } else if (noteType === 'habitLoop') {
-                              const { habitTitle, actionType, restContent } = parseHabitLoopHeader(activeNote.content);
-                              return (
-                                <div className="editor-structured-container">
-                                  <div className="meta-inputs-grid">
-                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '200px' }}>
-                                      <label className="meta-label">Habit Title</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={habitTitle} 
-                                        placeholder="e.g. Read every night before sleep"
-                                        onChange={(e) => {
-                                          const newContent = updateHabitLoopHeader(e.target.value, actionType, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="meta-input-group" style={{ width: '200px' }}>
-                                      <label className="meta-label">Action Type</label>
-                                      <select 
-                                        className="meta-input select" 
-                                        value={actionType}
-                                        onChange={(e) => {
-                                          const newContent = updateHabitLoopHeader(habitTitle, e.target.value, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      >
-                                        <option value="">Select Action Type</option>
-                                        <option value="Build Good Habit">Build Good Habit</option>
-                                        <option value="Break Bad Habit">Break Bad Habit</option>
-                                      </select>
-                                    </div>
-                                  </div>
-                                  <textarea
-                                    ref={textareaRef}
-                                    className="journal-textarea"
-                                    value={restContent}
-                                    onChange={(e) => {
-                                      const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
-                                      handleEditNoteText(newContent);
-                                    }}
-                                    placeholder="Design the 4 laws of habit loops here..."
-                                    autoFocus
-                                  />
-                                </div>
-                              );
-                            } else if (noteType === 'friction') {
-                              const { targetHabit, goal, restContent } = parseFrictionHeader(activeNote.content);
-                              return (
-                                <div className="editor-structured-container">
-                                  <div className="meta-inputs-grid">
-                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                                      <label className="meta-label">Target Habit</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={targetHabit} 
-                                        placeholder="e.g. Limit morning social media scrolling"
-                                        onChange={(e) => {
-                                          const newContent = updateFrictionHeader(e.target.value, goal, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                    
-                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
-                                      <label className="meta-label">Goal</label>
-                                      <input 
-                                        type="text" 
-                                        className="meta-input" 
-                                        value={goal} 
-                                        placeholder="e.g. Reduce daily screen time by 30 mins"
-                                        onChange={(e) => {
-                                          const newContent = updateFrictionHeader(targetHabit, e.target.value, restContent);
-                                          handleEditNoteText(newContent);
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                  <textarea
-                                    ref={textareaRef}
-                                    className="journal-textarea"
-                                    value={restContent}
-                                    onChange={(e) => {
-                                      const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
-                                      handleEditNoteText(newContent);
-                                    }}
-                                    placeholder="Define invisible cues, friction canvas here..."
-                                    autoFocus
-                                  />
-                                </div>
-                              );
-                            } else {
-                              return (
-                                <textarea
-                                  ref={textareaRef}
-                                  className="journal-textarea"
-                                  value={activeNote.content}
-                                  onChange={(e) => handleEditNoteText(e.target.value)}
-                                  placeholder="Write, paste, or insert a habit design template..."
-                                  autoFocus
-                                />
-                              );
-                            }
-                          })()}
+                          <NoteEditor 
+                            activeNote={activeNote} 
+                            onSave={handleEditNoteText} 
+                            textareaRef={textareaRef} 
+                          />
                         </React.Fragment>
                       ) : (
                         <div className="preview-container">
