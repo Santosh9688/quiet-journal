@@ -1490,7 +1490,7 @@
 
   <!-- React Code Component -->
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useLayoutEffect } = React;
 
     // Unified storage helper
     const storage = {
@@ -1885,6 +1885,7 @@ Action Type: Build Good Habit
     const NoteEditor = ({ activeNote, onSave, textareaRef }) => {
       const [localContent, setLocalContent] = useState(activeNote.content);
       const lastActiveNoteIdRef = useRef(activeNote.id);
+      const pendingSelectionRef = useRef(null);
 
       // Reset local content if note ID changes
       if (activeNote.id !== lastActiveNoteIdRef.current) {
@@ -1912,6 +1913,16 @@ Action Type: Build Good Habit
 
         return () => clearTimeout(handler);
       }, [localContent, activeNote.content]);
+
+      // Apply pending selection range synchronously after React rendering is committed to the DOM
+      useLayoutEffect(() => {
+        if (pendingSelectionRef.current && textareaRef.current) {
+          const { start, end } = pendingSelectionRef.current;
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(start, end);
+          pendingSelectionRef.current = null;
+        }
+      });
 
       const handleLocalChange = (newText) => {
         setLocalContent(newText);
@@ -2044,10 +2055,7 @@ Action Type: Build Good Habit
           }
         }
 
-        setTimeout(() => {
-          textarea.focus();
-          textarea.setSelectionRange(start + selStartOffset, start + selEndOffset);
-        }, 50);
+        pendingSelectionRef.current = { start: start + selStartOffset, end: start + selEndOffset };
       };
 
       const renderToolbar = () => (
