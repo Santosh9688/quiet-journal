@@ -1092,7 +1092,7 @@
     }
 
     /* Mobile / Responsive Styling */
-    @media (max-width: 768px) {
+    @media (max-width: 992px) {
       .app-container {
         flex-direction: column;
       }
@@ -1160,6 +1160,20 @@
       .btn-text-responsive {
         display: none;
       }
+
+      .mobile-close-sidebar-btn {
+        display: flex;
+      }
+
+      .editor-header-right .desktop-text,
+      .editor-header-right .mobile-text {
+        display: none !important;
+      }
+      
+      .editor-header-right .btn-secondary {
+        padding: 8px;
+        aspect-ratio: 1;
+      }
     }
 
     /* Editor Toolbar Styles */
@@ -1226,6 +1240,226 @@
 
     .mobile-text {
       display: none;
+    }
+
+    /* Collapsible close button styling */
+    .mobile-close-sidebar-btn {
+      display: none;
+      border: none;
+      background: none;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-close-sidebar-btn:hover {
+      background-color: var(--active-bg);
+      color: var(--text-primary);
+    }
+
+    /* Structured Editor Header Styles */
+    .editor-structured-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .meta-inputs-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+      background-color: var(--bg-sidebar);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .meta-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .meta-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-input {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      font-family: var(--font-ui);
+      outline: none;
+    }
+
+    .meta-input:focus {
+      border-color: var(--accent-color);
+    }
+    
+    .meta-input.select {
+      cursor: pointer;
+      appearance: none;
+    }
+
+    /* Onboarding Empty State Card */
+    .onboarding-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      overflow-y: auto;
+      width: 100%;
+      height: 100%;
+    }
+
+    .onboarding-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 600px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+
+    .onboarding-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      margin: 12px 0 28px 0;
+      line-height: 1.5;
+    }
+
+    .onboarding-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      text-align: left;
+    }
+
+    .onboarding-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background-color: var(--accent-soft);
+      color: var(--accent-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .onboarding-step h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .onboarding-step p {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Changelog Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .about-modal-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 440px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .about-modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .about-modal-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-close-modal {
+      border: none;
+      background: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+
+    .btn-close-modal:hover {
+      color: var(--text-primary);
+    }
+
+    .about-modal-body {
+      padding: 24px 20px;
+    }
+
+    /* Day Box Click Pop Animation */
+    .day-box {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .day-box:active {
+      transform: scale(0.9);
+    }
+
+    .day-box.checked {
+      animation: checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes checkPop {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
@@ -1486,6 +1720,9 @@ Action Type: Build Good Habit
       ),
       Menu: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      ),
+      Close: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       )
     };
 
@@ -1511,6 +1748,7 @@ Action Type: Build Good Habit
       // Confirmation states
       const [resetConfirmId, setResetConfirmId] = useState(null);
       const [expDeleteConfirmId, setExpDeleteConfirmId] = useState(null);
+      const [aboutModalOpen, setAboutModalOpen] = useState(false);
       
       // Dynamic dropdown inserts
       const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -1836,7 +2074,7 @@ Action Type: Build Good Habit
       const handleCreateExperiment = () => {
         const newExp = {
           id: `exp-${Date.now()}`,
-          title: "New Habit Experiment",
+          title: "",
           laws: { obvious: false, attractive: false, easy: false, satisfying: false },
           days: [false, false, false, false, false, false, false],
           createdAt: new Date().toISOString()
@@ -2224,13 +2462,23 @@ Action Type: Build Good Habit
                   <span>Quiet Journal</span>
                 </div>
                 
-                <button 
-                  onClick={toggleTheme} 
-                  className="theme-toggle-btn"
-                  title="Toggle Light/Dark Theme"
-                >
-                  {theme === 'light' ? <Icons.Moon /> : <Icons.Sun />}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    onClick={toggleTheme} 
+                    className="theme-toggle-btn"
+                    title="Toggle Light/Dark Theme"
+                  >
+                    {theme === 'light' ? <Icons.Moon /> : <Icons.Sun />}
+                  </button>
+                  
+                  <button 
+                    className="mobile-close-sidebar-btn"
+                    onClick={() => setMobileSidebarActive(false)}
+                    title="Close sidebar"
+                  >
+                    <Icons.Close />
+                  </button>
+                </div>
               </div>
 
               {/* View Nav selector */}
@@ -2259,6 +2507,11 @@ Action Type: Build Good Habit
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+                  {searchQuery && (
+                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '6px', fontWeight: '500' }}>
+                      Found {filteredNotes.length} matching {filteredNotes.length === 1 ? 'note' : 'notes'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2303,7 +2556,7 @@ Action Type: Build Good Habit
                             setMobileSidebarActive(false);
                           }}
                         >
-                          <span className="note-item-title">{getNoteTitle(note.content)}</span>
+                          <span className="note-item-title">{highlightText(getNoteTitle(note.content), searchQuery)}</span>
                           <span className="note-item-meta">{getNoteMeta(note.content)}</span>
                         </button>
                         
@@ -2336,7 +2589,13 @@ Action Type: Build Good Habit
                 <div className={`sync-indicator ${isSaving ? 'saving' : ''}`}></div>
                 <span>{isSaving ? 'Saving changes...' : 'All changes saved'}</span>
               </div>
-              <div>v1.3.0</div>
+              <div 
+                onClick={() => setAboutModalOpen(true)} 
+                style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }} 
+                title="View Changelog & About"
+              >
+                v1.4.0
+              </div>
             </div>
           </aside>
 
@@ -2344,7 +2603,57 @@ Action Type: Build Good Habit
           <main className={`main-area ${!mobileSidebarActive ? 'active' : ''}`}>
             
             {view === 'journal' && (
-              activeNote ? (
+              notes.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                  <header className="editor-header" style={{ borderBottom: 'none' }}>
+                    <div className="editor-header-left">
+                      <button 
+                        className="mobile-menu-btn" 
+                        onClick={() => setMobileSidebarActive(true)}
+                        title="Open sidebar"
+                        style={{ display: 'flex' }}
+                      >
+                        <Icons.Menu />
+                      </button>
+                    </div>
+                  </header>
+                  <div className="onboarding-container">
+                    <div className="onboarding-card">
+                      <div className="logo-illustration-wrapper" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                        <Logo size={80} />
+                      </div>
+                      <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px' }}>Welcome to Quiet Journal! 📘</h2>
+                      <p className="onboarding-subtitle">Your companion for building reading systems and tracking daily habits based on the <strong>Atomic Habits</strong> framework.</p>
+                      
+                      <div className="onboarding-steps">
+                        <div className="onboarding-step">
+                          <span className="step-num">1</span>
+                          <div>
+                            <h4>Create an Atomic Template</h4>
+                            <p>Start with a structured outline for your reading notes, habit loops, or environments.</p>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                              <button className="btn-secondary" style={{ fontSize: '0.74rem', padding: '6px 12px' }} onClick={() => handleCreateNote('chapter')}>📖 Reading Notes</button>
+                              <button className="btn-secondary" style={{ fontSize: '0.74rem', padding: '6px 12px' }} onClick={() => handleCreateNote('habitLoop')}>🔄 Habit Loop</button>
+                              <button className="btn-secondary" style={{ fontSize: '0.74rem', padding: '6px 12px' }} onClick={() => handleCreateNote('frictionCanvas')}>🎨 Friction Canvas</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="onboarding-step">
+                          <span className="step-num">2</span>
+                          <div>
+                            <h4>Design Habit Experiments</h4>
+                            <p>Run 7-day environmental experiments. Toggle cues, friction levels, and check off daily streaks.</p>
+                            <button className="btn-secondary" style={{ fontSize: '0.74rem', padding: '6px 12px', marginTop: '8px' }} onClick={() => { setView('experiments'); setMobileSidebarActive(false); }}>
+                              Go to Experiments Tracker
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : activeNote ? (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
                   
                   {/* Editor Header */}
@@ -2363,8 +2672,8 @@ Action Type: Build Good Habit
                     <div className="editor-header-right">
                       <button className="btn-secondary" onClick={handleAddDailyEntry} title="Add dated daily entry block">
                         <Icons.Plus />
-                        <span className="desktop-text">+ Add daily entry</span>
-                        <span className="mobile-text">+ Entry</span>
+                        <span className="desktop-text" style={{ marginLeft: '4px' }}>+ Add daily entry</span>
+                        <span className="mobile-text" style={{ marginLeft: '4px' }}>+ Entry</span>
                       </button>
 
                       {/* Dropdown template inserts */}
@@ -2374,8 +2683,9 @@ Action Type: Build Good Habit
                           onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
                           title="Insert template block at cursor"
                         >
-                          <span className="desktop-text">📋 Insert Template</span>
-                          <span className="mobile-text">📋 Templates</span>
+                          <span>📋</span>
+                          <span className="desktop-text" style={{ marginLeft: '4px' }}>Insert Template</span>
+                          <span className="mobile-text" style={{ marginLeft: '4px' }}>Templates</span>
                         </button>
                         {templateMenuOpen && (
                           <div className="template-dropdown-menu" onClick={(e) => e.stopPropagation()}>
@@ -2448,14 +2758,189 @@ Action Type: Build Good Habit
                               ⚡ Action
                             </button>
                           </div>
-                          <textarea
-                            ref={textareaRef}
-                            className="journal-textarea"
-                            value={activeNote.content}
-                            onChange={(e) => handleEditNoteText(e.target.value)}
-                            placeholder="Write, paste, or insert a habit design template..."
-                            autoFocus
-                          />
+                          {(() => {
+                            const noteType = getNoteType(activeNote.content);
+                            if (noteType === 'chapter') {
+                              const { chapterNum, chapterTitle, pages, started, restContent } = parseChapterHeader(activeNote.content);
+                              return (
+                                <div className="editor-structured-container">
+                                  <div className="meta-inputs-grid">
+                                    <div className="meta-input-group" style={{ width: '80px' }}>
+                                      <label className="meta-label">Chapter</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={chapterNum} 
+                                        placeholder="e.g. 1"
+                                        onChange={(e) => {
+                                          const newContent = updateChapterHeader(e.target.value, chapterTitle, pages, started, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                                      <label className="meta-label">Chapter Title</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={chapterTitle} 
+                                        placeholder="The Surprising Power of Atomic Habits"
+                                        onChange={(e) => {
+                                          const newContent = updateChapterHeader(chapterNum, e.target.value, pages, started, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div className="meta-input-group" style={{ width: '100px' }}>
+                                      <label className="meta-label">Pages</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={pages} 
+                                        placeholder="15-28"
+                                        onChange={(e) => {
+                                          const newContent = updateChapterHeader(chapterNum, chapterTitle, e.target.value, started, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div className="meta-input-group" style={{ width: '120px' }}>
+                                      <label className="meta-label">Started</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={started} 
+                                        placeholder="05/28/2026"
+                                        onChange={(e) => {
+                                          const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, e.target.value, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <textarea
+                                    ref={textareaRef}
+                                    className="journal-textarea"
+                                    value={restContent}
+                                    onChange={(e) => {
+                                      const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
+                                      handleEditNoteText(newContent);
+                                    }}
+                                    placeholder="Write your chapter review notes here..."
+                                    autoFocus
+                                  />
+                                </div>
+                              );
+                            } else if (noteType === 'habitLoop') {
+                              const { habitTitle, actionType, restContent } = parseHabitLoopHeader(activeNote.content);
+                              return (
+                                <div className="editor-structured-container">
+                                  <div className="meta-inputs-grid">
+                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '200px' }}>
+                                      <label className="meta-label">Habit Title</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={habitTitle} 
+                                        placeholder="e.g. Read every night before sleep"
+                                        onChange={(e) => {
+                                          const newContent = updateHabitLoopHeader(e.target.value, actionType, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div className="meta-input-group" style={{ width: '200px' }}>
+                                      <label className="meta-label">Action Type</label>
+                                      <select 
+                                        className="meta-input select" 
+                                        value={actionType}
+                                        onChange={(e) => {
+                                          const newContent = updateHabitLoopHeader(habitTitle, e.target.value, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      >
+                                        <option value="">Select Action Type</option>
+                                        <option value="Build Good Habit">Build Good Habit</option>
+                                        <option value="Break Bad Habit">Break Bad Habit</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <textarea
+                                    ref={textareaRef}
+                                    className="journal-textarea"
+                                    value={restContent}
+                                    onChange={(e) => {
+                                      const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
+                                      handleEditNoteText(newContent);
+                                    }}
+                                    placeholder="Design the 4 laws of habit loops here..."
+                                    autoFocus
+                                  />
+                                </div>
+                              );
+                            } else if (noteType === 'friction') {
+                              const { targetHabit, goal, restContent } = parseFrictionHeader(activeNote.content);
+                              return (
+                                <div className="editor-structured-container">
+                                  <div className="meta-inputs-grid">
+                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                                      <label className="meta-label">Target Habit</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={targetHabit} 
+                                        placeholder="e.g. Limit morning social media scrolling"
+                                        onChange={(e) => {
+                                          const newContent = updateFrictionHeader(e.target.value, goal, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div className="meta-input-group" style={{ flex: 1, minWidth: '180px' }}>
+                                      <label className="meta-label">Goal</label>
+                                      <input 
+                                        type="text" 
+                                        className="meta-input" 
+                                        value={goal} 
+                                        placeholder="e.g. Reduce daily screen time by 30 mins"
+                                        onChange={(e) => {
+                                          const newContent = updateFrictionHeader(targetHabit, e.target.value, restContent);
+                                          handleEditNoteText(newContent);
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <textarea
+                                    ref={textareaRef}
+                                    className="journal-textarea"
+                                    value={restContent}
+                                    onChange={(e) => {
+                                      const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
+                                      handleEditNoteText(newContent);
+                                    }}
+                                    placeholder="Define invisible cues, friction canvas here..."
+                                    autoFocus
+                                  />
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <textarea
+                                  ref={textareaRef}
+                                  className="journal-textarea"
+                                  value={activeNote.content}
+                                  onChange={(e) => handleEditNoteText(e.target.value)}
+                                  placeholder="Write, paste, or insert a habit design template..."
+                                  autoFocus
+                                />
+                              );
+                            }
+                          })()}
                         </React.Fragment>
                       ) : (
                         <div className="preview-container">
@@ -2467,16 +2952,30 @@ Action Type: Build Good Habit
 
                 </div>
               ) : (
-                <div className="blank-slate">
-                  <div className="logo-illustration-wrapper">
-                    <Logo size={72} />
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                  <header className="editor-header" style={{ borderBottom: 'none' }}>
+                    <div className="editor-header-left">
+                      <button 
+                        className="mobile-menu-btn" 
+                        onClick={() => setMobileSidebarActive(true)}
+                        title="Open sidebar"
+                        style={{ display: 'flex' }}
+                      >
+                        <Icons.Menu />
+                      </button>
+                    </div>
+                  </header>
+                  <div className="blank-slate" style={{ flex: 1 }}>
+                    <div className="logo-illustration-wrapper">
+                      <Logo size={72} />
+                    </div>
+                    <h3 className="blank-slate-title">Quiet Journal</h3>
+                    <p className="blank-slate-desc">Select a note or create one using our Atomic Habits templates to begin your system design.</p>
+                    <button className="btn-primary" style={{ marginTop: '8px', width: 'auto' }} onClick={() => handleCreateNote('chapter')}>
+                      <Icons.Plus />
+                      <span>Create a Note</span>
+                    </button>
                   </div>
-                  <h3 className="blank-slate-title">Quiet Journal</h3>
-                  <p className="blank-slate-desc">Select a note or create one using our Atomic Habits templates to begin your system design.</p>
-                  <button className="btn-primary" style={{ marginTop: '8px', width: 'auto' }} onClick={() => handleCreateNote('chapter')}>
-                    <Icons.Plus />
-                    <span>Create a Note</span>
-                  </button>
                 </div>
               )
             )}
@@ -2713,6 +3212,37 @@ Action Type: Build Good Habit
 
           </main>
 
+          {/* Changelog Modal */}
+          {aboutModalOpen && (
+            <div className="modal-overlay" onClick={() => setAboutModalOpen(false)}>
+              <div className="about-modal-card" onClick={(e) => e.stopPropagation()}>
+                <div className="about-modal-header">
+                  <h3>About Quiet Journal</h3>
+                  <button className="btn-close-modal" onClick={() => setAboutModalOpen(false)}>×</button>
+                </div>
+                <div className="about-modal-body">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+                    <Logo size={48} />
+                    <h4 style={{ marginTop: '8px', fontWeight: '700', fontSize: '1.1rem', color: 'var(--text-primary)' }}>Quiet Journal</h4>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Version 1.4.0</div>
+                  </div>
+                  <p style={{ fontSize: '0.86rem', lineHeight: '1.5', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                    Quiet Journal is a reading habit companion designed around the "Atomic Habits" framework by James Clear. It helps you design habit systems, run tracker experiments, and capture chapter insights.
+                  </p>
+                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.4.0):</h5>
+                  <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '1.6' }}>
+                    <li>✨ <strong>Notion-style Metadata Editor</strong>: Template fields are now structured inputs instead of raw plain-text.</li>
+                    <li>📝 <strong>Formatting Toolbar</strong>: Quick buttons for bold, italic, lists, dividers, and Atomic blocks.</li>
+                    <li>👁️ <strong>Inline Markdown Preview</strong>: Bold (`**`) and italic (`*`) text render correctly in Preview cards.</li>
+                    <li>📱 <strong>Improved Mobile Responsiveness</strong>: Sidebar collapses on tablets (≤ 992px) with a close button and hamburger drawer.</li>
+                    <li>🔍 <strong>Live Search Term Highlighting</strong>: Matching queries glow in the sidebar notes list.</li>
+                    <li>🎉 <strong>Empty Workspace Onboarding</strong>: Welcoming checklist screens for first-time users.</li>
+                    <li>🔥 <strong>Satisfying Click Pop Animations</strong>: Tracker day cells react visually when checked.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
