@@ -1882,7 +1882,7 @@ Action Type: Build Good Habit
     };
 
     // NoteEditor Component for State Partitioning (Typing Performance)
-    const NoteEditor = ({ activeNote, onSave, textareaRef }) => {
+    const NoteEditor = ({ activeNote, onSave, textareaRef, selectionRangeRef }) => {
       const [localContent, setLocalContent] = useState(activeNote.content);
       const lastActiveNoteIdRef = useRef(activeNote.id);
       const pendingSelectionRef = useRef(null);
@@ -1924,6 +1924,13 @@ Action Type: Build Good Habit
         }
       });
 
+      const saveSelection = (e) => {
+        selectionRangeRef.current = {
+          start: e.target.selectionStart,
+          end: e.target.selectionEnd
+        };
+      };
+
       const handleLocalChange = (newText) => {
         setLocalContent(newText);
       };
@@ -1934,8 +1941,8 @@ Action Type: Build Good Habit
         const textarea = textareaRef.current;
         if (!textarea) return;
 
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
+        const start = selectionRangeRef.current.start;
+        const end = selectionRangeRef.current.end;
         const currentText = textarea.value;
         const selectedText = currentText.substring(start, end);
 
@@ -2160,6 +2167,9 @@ Action Type: Build Good Habit
                   const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, e.target.value);
                   handleLocalChange(newContent);
                 }}
+                onSelect={saveSelection}
+                onKeyUp={saveSelection}
+                onMouseUp={saveSelection}
                 placeholder="Write your chapter review notes here..."
                 autoFocus
               />
@@ -2211,6 +2221,9 @@ Action Type: Build Good Habit
                   const newContent = updateHabitLoopHeader(habitTitle, actionType, e.target.value);
                   handleLocalChange(newContent);
                 }}
+                onSelect={saveSelection}
+                onKeyUp={saveSelection}
+                onMouseUp={saveSelection}
                 placeholder="Design the 4 laws of habit loops here..."
                 autoFocus
               />
@@ -2260,6 +2273,9 @@ Action Type: Build Good Habit
                   const newContent = updateFrictionHeader(targetHabit, goal, e.target.value);
                   handleLocalChange(newContent);
                 }}
+                onSelect={saveSelection}
+                onKeyUp={saveSelection}
+                onMouseUp={saveSelection}
                 placeholder="Define invisible cues, friction canvas here..."
                 autoFocus
               />
@@ -2275,6 +2291,9 @@ Action Type: Build Good Habit
               className="journal-textarea"
               value={localContent}
               onChange={(e) => handleLocalChange(e.target.value)}
+              onSelect={saveSelection}
+              onKeyUp={saveSelection}
+              onMouseUp={saveSelection}
               placeholder="Write, paste, or insert a habit design template..."
               autoFocus
             />
@@ -2311,6 +2330,12 @@ Action Type: Build Good Habit
       const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
       
       const textareaRef = useRef(null);
+      const selectionRangeRef = useRef({ start: 0, end: 0 });
+
+      // Reset selection when active note changes
+      useEffect(() => {
+        selectionRangeRef.current = { start: 0, end: 0 };
+      }, [activeNoteId]);
 
       // Close template menu on click outside
       useEffect(() => {
@@ -2544,17 +2569,35 @@ Action Type: Build Good Habit
           return;
         }
 
+        const start = selectionRangeRef.current.start;
+        const end = selectionRangeRef.current.end;
+
         textarea.focus();
         try {
+          textarea.setSelectionRange(start, end);
           if (!document.execCommand('insertText', false, textToInsert)) {
             throw new Error('execCommand failed');
           }
         } catch (e) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const currentText = activeNote.content;
+          const currentText = textarea.value;
           const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
-          handleEditNoteText(newText);
+          
+          const noteType = getNoteType(activeNote.content);
+          if (noteType === 'chapter') {
+            const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(activeNote.content);
+            const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
+            handleEditNoteText(newContent);
+          } else if (noteType === 'habitLoop') {
+            const { habitTitle, actionType } = parseHabitLoopHeader(activeNote.content);
+            const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
+            handleEditNoteText(newContent);
+          } else if (noteType === 'friction') {
+            const { targetHabit, goal } = parseFrictionHeader(activeNote.content);
+            const newContent = updateFrictionHeader(targetHabit, goal, newText);
+            handleEditNoteText(newContent);
+          } else {
+            handleEditNoteText(newText);
+          }
 
           setTimeout(() => {
             textarea.focus();
@@ -2711,7 +2754,7 @@ Action Type: Build Good Habit
         if (!text) return "";
         const parts = [];
         let lastIndex = 0;
-        const regex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/g;
+        const regex = /\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/g;
         let match;
         
         while ((match = regex.exec(text)) !== null) {
@@ -2719,8 +2762,12 @@ Action Type: Build Good Habit
             parts.push(text.substring(lastIndex, match.index));
           }
           if (match[1]) {
+            parts.push(<strong key={match.index}>{match[1]}</strong>);
+          } else if (match[2]) {
             parts.push(<strong key={match.index}>{match[2]}</strong>);
           } else if (match[3]) {
+            parts.push(<em key={match.index}>{match[3]}</em>);
+          } else if (match[4]) {
             parts.push(<em key={match.index}>{match[4]}</em>);
           }
           lastIndex = regex.lastIndex;
@@ -3303,6 +3350,7 @@ Action Type: Build Good Habit
                           activeNote={activeNote} 
                           onSave={handleEditNoteText} 
                           textareaRef={textareaRef} 
+                          selectionRangeRef={selectionRangeRef}
                         />
                       ) : (
                         <div className="preview-container">
