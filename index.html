@@ -493,6 +493,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
 
     .mobile-back-btn {
@@ -503,6 +504,7 @@
       cursor: pointer;
       color: var(--text-secondary);
       border-radius: 4px;
+      flex-shrink: 0;
     }
 
     .mobile-back-btn:hover {
@@ -513,12 +515,17 @@
       font-size: 1rem;
       font-weight: 600;
       color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: clamp(120px, 35vw, 450px);
     }
 
     .editor-header-right {
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
     }
 
     .toggle-preview-group {
@@ -1130,6 +1137,95 @@
       .experiments-container {
         padding: 24px 16px;
       }
+
+      .mobile-menu-btn {
+        display: flex;
+        margin-right: 12px;
+      }
+
+      .experiments-header {
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .desktop-text {
+        display: none;
+      }
+
+      .mobile-text {
+        display: inline;
+      }
+
+      .btn-text-responsive {
+        display: none;
+      }
+    }
+
+    /* Editor Toolbar Styles */
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 12px;
+      background-color: var(--bg-sidebar);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .toolbar-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      font-family: var(--font-ui);
+    }
+
+    .toolbar-btn:hover {
+      background-color: var(--active-bg);
+      border-color: var(--text-muted);
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 18px;
+      background-color: var(--border-color);
+      margin: 0 4px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      border: none;
+      background: none;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-menu-btn:hover {
+      background-color: var(--active-bg);
+    }
+
+    .desktop-text {
+      display: inline;
+    }
+
+    .mobile-text {
+      display: none;
     }
   </style>
 </head>
@@ -1379,14 +1475,14 @@ Action Type: Build Good Habit
       Moon: () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
       ),
-      ChevronLeft: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      ),
       Edit: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
       ),
       Eye: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      ),
+      Menu: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       )
     };
 
@@ -1408,6 +1504,10 @@ Action Type: Build Good Habit
       const [editorMode, setEditorMode] = useState('edit');
       const [deleteConfirmId, setDeleteConfirmId] = useState(null);
       const [mobileSidebarActive, setMobileSidebarActive] = useState(true);
+      
+      // Confirmation states
+      const [resetConfirmId, setResetConfirmId] = useState(null);
+      const [expDeleteConfirmId, setExpDeleteConfirmId] = useState(null);
       
       // Dynamic dropdown inserts
       const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -1566,17 +1666,92 @@ Action Type: Build Good Habit
           return;
         }
 
+        textarea.focus();
+        try {
+          if (!document.execCommand('insertText', false, textToInsert)) {
+            throw new Error('execCommand failed');
+          }
+        } catch (e) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const currentText = activeNote.content;
+          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+          handleEditNoteText(newText);
+
+          setTimeout(() => {
+            textarea.focus();
+            const newCursorPos = start + textToInsert.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+          }, 50);
+        }
+      };
+
+      // Add a formatting string/markup to textarea (keeps undo history)
+      const applyFormatting = (formatType) => {
+        const textarea = textareaRef.current;
+        const activeNote = notes.find(n => n.id === activeNoteId);
+        if (!textarea || !activeNote) return;
+
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const currentText = activeNote.content;
-        const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+        const currentText = textarea.value;
+        const selectedText = currentText.substring(start, end);
 
-        handleEditNoteText(newText);
+        let textToInsert = '';
+        let cursorOffset = 0;
+
+        switch (formatType) {
+          case 'bold':
+            textToInsert = `**${selectedText || 'bold'}**`;
+            cursorOffset = selectedText ? textToInsert.length : 2;
+            break;
+          case 'italic':
+            textToInsert = `*${selectedText || 'italic'}*`;
+            cursorOffset = selectedText ? textToInsert.length : 1;
+            break;
+          case 'bullet':
+            textToInsert = `\n• ${selectedText || 'List item'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'number':
+            textToInsert = `\n1. ${selectedText || 'List item'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'divider':
+            textToInsert = `\n━━━ SECTION NAME ━━━\n`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'insight':
+            textToInsert = `\n💡 Key Insight: ${selectedText || 'Insight text'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'shift':
+            textToInsert = `\n🎯 Identity Shift: ${selectedText || 'Shift description'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          case 'action':
+            textToInsert = `\n⚡ 1% Habit Action: ${selectedText || 'Tiny habit action'}`;
+            cursorOffset = textToInsert.length;
+            break;
+          default:
+            return;
+        }
+
+        textarea.focus();
+        try {
+          textarea.setSelectionRange(start, end);
+          if (!document.execCommand('insertText', false, textToInsert)) {
+            throw new Error('execCommand failed');
+          }
+        } catch (e) {
+          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+          handleEditNoteText(newText);
+        }
 
         setTimeout(() => {
           textarea.focus();
-          const newCursorPos = start + textToInsert.length;
-          textarea.setSelectionRange(newCursorPos, newCursorPos);
+          const newPos = start + cursorOffset;
+          textarea.setSelectionRange(newPos, newPos);
         }, 50);
       };
 
@@ -1595,24 +1770,53 @@ Action Type: Build Good Habit
         const delimiter = "━━━ DAILY ENTRIES ━━━";
         const text = note.content;
         const index = text.indexOf(delimiter);
-        let updatedContent = "";
-
-        if (index !== -1) {
-          const insertPos = index + delimiter.length;
-          updatedContent = text.slice(0, insertPos) + "\n" + dailyBlock + text.slice(insertPos);
-        } else {
-          updatedContent = text + "\n\n" + delimiter + "\n" + dailyBlock;
-        }
-
-        handleEditNoteText(updatedContent);
+        
+        const textarea = textareaRef.current;
         setEditorMode('edit');
-        setTimeout(() => {
-          if (textareaRef.current) {
-            textareaRef.current.focus();
-            const pos = updatedContent.indexOf(todayStr) + todayStr.length + 11;
-            textareaRef.current.setSelectionRange(pos, pos);
+
+        if (textarea) {
+          textarea.focus();
+          let insertPos;
+          let textToInsert = '';
+
+          if (index !== -1) {
+            insertPos = index + delimiter.length;
+            textToInsert = "\n" + dailyBlock;
+          } else {
+            insertPos = text.length;
+            textToInsert = "\n\n" + delimiter + "\n" + dailyBlock;
           }
-        }, 50);
+
+          try {
+            textarea.setSelectionRange(insertPos, insertPos);
+            if (!document.execCommand('insertText', false, textToInsert)) {
+              throw new Error('execCommand failed');
+            }
+            setTimeout(() => {
+              textarea.focus();
+              const updatedText = textarea.value;
+              const pos = updatedText.indexOf(todayStr) + todayStr.length + 11;
+              textarea.setSelectionRange(pos, pos);
+            }, 50);
+          } catch (e) {
+            // Fallback manual replacement
+            const updatedContent = index !== -1
+              ? text.slice(0, insertPos) + "\n" + dailyBlock + text.slice(insertPos)
+              : text + "\n\n" + delimiter + "\n" + dailyBlock;
+            handleEditNoteText(updatedContent);
+            setTimeout(() => {
+              textarea.focus();
+              const pos = updatedContent.indexOf(todayStr) + todayStr.length + 11;
+              textarea.setSelectionRange(pos, pos);
+            }, 50);
+          }
+        } else {
+          // No textarea (e.g. preview mode fallback)
+          const updatedContent = index !== -1
+            ? text.slice(0, index + delimiter.length) + "\n" + dailyBlock + text.slice(index + delimiter.length)
+            : text + "\n\n" + delimiter + "\n" + dailyBlock;
+          handleEditNoteText(updatedContent);
+        }
       };
 
       const handleDeleteNote = (id, e) => {
@@ -1620,6 +1824,7 @@ Action Type: Build Good Habit
         setNotes(notes.filter(n => n.id !== id));
         if (activeNoteId === id) {
           setActiveNoteId(null);
+          setMobileSidebarActive(true);
         }
         setDeleteConfirmId(null);
       };
@@ -1690,6 +1895,33 @@ Action Type: Build Good Habit
 
       const activeNote = notes.find(n => n.id === activeNoteId);
 
+      // Inline markdown parser for bold and italic
+      const parseInlineMarkdown = (text) => {
+        if (!text) return "";
+        const parts = [];
+        let lastIndex = 0;
+        const regex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/g;
+        let match;
+        
+        while ((match = regex.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            parts.push(text.substring(lastIndex, match.index));
+          }
+          if (match[1]) {
+            parts.push(<strong key={match.index}>{match[2]}</strong>);
+          } else if (match[3]) {
+            parts.push(<em key={match.index}>{match[4]}</em>);
+          }
+          lastIndex = regex.lastIndex;
+        }
+        
+        if (lastIndex < text.length) {
+          parts.push(text.substring(lastIndex));
+        }
+        
+        return parts.length > 0 ? parts : text;
+      };
+
       // Custom HTML Preview Renderer
       const renderPreview = (content) => {
         if (!content) return null;
@@ -1723,10 +1955,10 @@ Action Type: Build Good Habit
           
           // Bullet point lists
           if (trimmed.startsWith('•') || trimmed.startsWith('*')) {
-            return <li key={idx} className="preview-bullet">{trimmed.substring(1).trim()}</li>;
+            return <li key={idx} className="preview-bullet">{parseInlineMarkdown(trimmed.substring(1).trim())}</li>;
           }
           if (/^\d+\./.test(trimmed)) {
-            return <li key={idx} className="preview-ordered">{trimmed.replace(/^\d+\./, '').trim()}</li>;
+            return <li key={idx} className="preview-ordered">{parseInlineMarkdown(trimmed.replace(/^\d+\./, '').trim())}</li>;
           }
 
           // Identity Elements
@@ -1736,7 +1968,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">👤</span>
                 <div className="block-content">
                   <strong>Identity Goal:</strong>
-                  <div>{trimmed.replace('👤 Identity Goal:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('👤 Identity Goal:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1748,7 +1980,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🌱</span>
                 <div className="block-content">
                   <strong>System Change:</strong>
-                  <div>{trimmed.replace('🌱 System Change:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('🌱 System Change:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1761,7 +1993,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🔍</span>
                 <div className="block-content">
                   <strong>Current Cue:</strong>
-                  <div>{trimmed.replace('🔍 Current Cue:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('🔍 Current Cue:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1773,7 +2005,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🚧</span>
                 <div className="block-content">
                   <strong>Friction Level:</strong>
-                  <div>{trimmed.replace('🚧 Friction Level:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('🚧 Friction Level:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1785,7 +2017,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">⚡</span>
                 <div className="block-content">
                   <strong>1% Habit Action:</strong>
-                  <div>{trimmed.replace('⚡ 1% Habit Action:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('⚡ 1% Habit Action:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1799,7 +2031,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">💡</span>
                 <div className="block-content">
                   <strong>Key Insight:</strong>
-                  <div>{cleanText || "..."}</div>
+                  <div>{parseInlineMarkdown(cleanText || "...")}</div>
                 </div>
               </div>
             );
@@ -1811,7 +2043,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🎯</span>
                 <div className="block-content">
                   <strong>Identity Shift:</strong>
-                  <div>{trimmed.replace('🎯 Identity Shift:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('🎯 Identity Shift:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1823,7 +2055,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">📝</span>
                 <div className="block-content">
                   <strong>One-line Summary:</strong>
-                  <div>{trimmed.replace('📝 One-line:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('📝 One-line:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1836,7 +2068,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">❓</span>
                 <div className="block-content">
                   <strong>Core Question:</strong>
-                  <div>{cleanText || "..."}</div>
+                  <div>{parseInlineMarkdown(cleanText || "...")}</div>
                 </div>
               </div>
             );
@@ -1848,7 +2080,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🔬</span>
                 <div className="block-content">
                   <strong>Scientific Evidence / Observations:</strong>
-                  <div>{trimmed.replace('🔬 Evidence:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('🔬 Evidence:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1860,7 +2092,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">✅</span>
                 <div className="block-content">
                   <strong>Conclusion:</strong>
-                  <div>{trimmed.replace('✅ Conclusion:', '').trim() || "..."}</div>
+                  <div>{parseInlineMarkdown(trimmed.replace('✅ Conclusion:', '').trim() || "...")}</div>
                 </div>
               </div>
             );
@@ -1873,7 +2105,7 @@ Action Type: Build Good Habit
                 <span className="block-emoji">🛠️</span>
                 <div className="block-content">
                   <strong>Immediate Application:</strong>
-                  <div>{cleanText || "..."}</div>
+                  <div>{parseInlineMarkdown(cleanText || "...")}</div>
                 </div>
               </div>
             );
@@ -1971,7 +2203,7 @@ Action Type: Build Good Habit
             return <div key={idx} className="preview-space" />;
           }
 
-          return <p key={idx} className="preview-text">{line}</p>;
+          return <p key={idx} className="preview-text">{parseInlineMarkdown(line)}</p>;
         });
       };
 
@@ -2128,7 +2360,8 @@ Action Type: Build Good Habit
                     <div className="editor-header-right">
                       <button className="btn-secondary" onClick={handleAddDailyEntry} title="Add dated daily entry block">
                         <Icons.Plus />
-                        <span>+ Add daily entry</span>
+                        <span className="desktop-text">+ Add daily entry</span>
+                        <span className="mobile-text">+ Entry</span>
                       </button>
 
                       {/* Dropdown template inserts */}
@@ -2138,7 +2371,8 @@ Action Type: Build Good Habit
                           onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
                           title="Insert template block at cursor"
                         >
-                          <span>📋 Insert Template</span>
+                          <span className="desktop-text">📋 Insert Template</span>
+                          <span className="mobile-text">📋 Templates</span>
                         </button>
                         {templateMenuOpen && (
                           <div className="template-dropdown-menu" onClick={(e) => e.stopPropagation()}>
@@ -2182,14 +2416,44 @@ Action Type: Build Good Habit
                   <div className="editor-body">
                     <div className="editor-body-inner">
                       {editorMode === 'edit' ? (
-                        <textarea
-                          ref={textareaRef}
-                          className="journal-textarea"
-                          value={activeNote.content}
-                          onChange={(e) => handleEditNoteText(e.target.value)}
-                          placeholder="Write, paste, or insert a habit design template..."
-                          autoFocus
-                        />
+                        <React.Fragment>
+                          <div className="editor-toolbar">
+                            <button className="toolbar-btn" onClick={() => applyFormatting('bold')} title="Bold selected text">
+                              <strong>B</strong>
+                            </button>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('italic')} title="Italic selected text">
+                              <em>I</em>
+                            </button>
+                            <div className="toolbar-divider"></div>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('bullet')} title="Insert bullet list item">
+                              • List
+                            </button>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('number')} title="Insert numbered list item">
+                              1. List
+                            </button>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('divider')} title="Insert section divider">
+                              ━ Divider
+                            </button>
+                            <div className="toolbar-divider"></div>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('insight')} title="Insert Key Insight block">
+                              💡 Insight
+                            </button>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('shift')} title="Insert Identity Shift block">
+                              🎯 Shift
+                            </button>
+                            <button className="toolbar-btn" onClick={() => applyFormatting('action')} title="Insert 1% Habit Action block">
+                              ⚡ Action
+                            </button>
+                          </div>
+                          <textarea
+                            ref={textareaRef}
+                            className="journal-textarea"
+                            value={activeNote.content}
+                            onChange={(e) => handleEditNoteText(e.target.value)}
+                            placeholder="Write, paste, or insert a habit design template..."
+                            autoFocus
+                          />
+                        </React.Fragment>
                       ) : (
                         <div className="preview-container">
                           {renderPreview(activeNote.content)}
@@ -2220,13 +2484,22 @@ Action Type: Build Good Habit
                 <div className="experiments-inner">
                   
                   <div className="experiments-header">
-                    <div className="experiments-title-area">
-                      <h1>Habit Experiments</h1>
-                      <p>Run 7-day sprints implementing micro-habits through structural environmental tweaks.</p>
+                    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                      <button 
+                        className="mobile-menu-btn" 
+                        onClick={() => setMobileSidebarActive(true)}
+                        title="Open sidebar"
+                      >
+                        <Icons.Menu />
+                      </button>
+                      <div className="experiments-title-area" style={{ minWidth: 0 }}>
+                        <h1 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Habit Experiments</h1>
+                        <p style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Run 7-day sprints implementing micro-habits.</p>
+                      </div>
                     </div>
-                    <button className="btn-primary" onClick={handleCreateExperiment} style={{ width: 'auto' }}>
+                    <button className="btn-primary" onClick={handleCreateExperiment} style={{ width: 'auto', flexShrink: 0 }}>
                       <Icons.Plus />
-                      <span>New Experiment</span>
+                      <span className="btn-text-responsive">New Experiment</span>
                     </button>
                   </div>
 
@@ -2260,14 +2533,34 @@ Action Type: Build Good Habit
                                 onChange={(e) => handleUpdateExperimentTitle(exp.id, e.target.value)}
                                 placeholder="E.g., Read 10 pages before sleep..."
                               />
-                              <div className="card-actions">
-                                <button 
-                                  className="btn-icon-danger" 
-                                  onClick={() => handleDeleteExperiment(exp.id)}
-                                  title="Delete experiment"
-                                >
-                                  <Icons.Trash />
-                                </button>
+                              <div className="card-actions" style={{ minHeight: '30px', display: 'flex', alignItems: 'center' }}>
+                                {expDeleteConfirmId === exp.id ? (
+                                  <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.74rem', color: '#b22222', fontWeight: '600', marginRight: '4px' }}>Delete?</span>
+                                    <button 
+                                      className="btn-confirm-yes" 
+                                      style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                                      onClick={() => { handleDeleteExperiment(exp.id); setExpDeleteConfirmId(null); }}
+                                    >
+                                      Delete
+                                    </button>
+                                    <button 
+                                      className="btn-confirm-no" 
+                                      style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                                      onClick={() => setExpDeleteConfirmId(null)}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    className="btn-icon-danger" 
+                                    onClick={() => setExpDeleteConfirmId(exp.id)}
+                                    title="Delete experiment"
+                                  >
+                                    <Icons.Trash />
+                                  </button>
+                                )}
                               </div>
                             </div>
 
@@ -2353,22 +2646,55 @@ Action Type: Build Good Habit
                                   />
                                 </div>
 
-                                <button 
-                                  onClick={() => handleResetExperiment(exp.id)}
-                                  style={{
-                                    fontSize: '0.74rem',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'var(--bg-primary)',
-                                    color: 'var(--text-secondary)',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    marginLeft: '8px'
-                                  }}
-                                  title="Reset checkboxes"
-                                >
-                                  Reset
-                                </button>
+                                {resetConfirmId === exp.id ? (
+                                  <div style={{ display: 'inline-flex', gap: '4px', marginLeft: '8px' }}>
+                                    <button 
+                                      onClick={() => { handleResetExperiment(exp.id); setResetConfirmId(null); }}
+                                      style={{
+                                        fontSize: '0.74rem',
+                                        border: '1px solid #b22222',
+                                        background: '#b22222',
+                                        color: 'white',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      Confirm
+                                    </button>
+                                    <button 
+                                      onClick={() => setResetConfirmId(null)}
+                                      style={{
+                                        fontSize: '0.74rem',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-primary)',
+                                        color: 'var(--text-secondary)',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => setResetConfirmId(exp.id)}
+                                    style={{
+                                      fontSize: '0.74rem',
+                                      border: '1px solid var(--border-color)',
+                                      background: 'var(--bg-primary)',
+                                      color: 'var(--text-secondary)',
+                                      padding: '4px 8px',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      marginLeft: '8px'
+                                    }}
+                                    title="Reset checkboxes"
+                                  >
+                                    Reset
+                                  </button>
+                                )}
                               </div>
                             </div>
 
