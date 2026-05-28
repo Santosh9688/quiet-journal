@@ -2060,30 +2060,30 @@ Action Type: Build Good Habit
 
       const renderToolbar = () => (
         <div className="editor-toolbar">
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('bold')} title="Bold selected text">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bold'); }} title="Bold selected text">
             <strong>B</strong>
           </button>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('italic')} title="Italic selected text">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('italic'); }} title="Italic selected text">
             <em>I</em>
           </button>
           <div className="toolbar-divider"></div>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('bullet')} title="Insert bullet list item">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bullet'); }} title="Insert bullet list item">
             • List
           </button>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('number')} title="Insert numbered list item">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('number'); }} title="Insert numbered list item">
             1. List
           </button>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('divider')} title="Insert section divider">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('divider'); }} title="Insert section divider">
             ━ Divider
           </button>
           <div className="toolbar-divider"></div>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('insight')} title="Insert Key Insight block">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('insight'); }} title="Insert Key Insight block">
             💡 Insight
           </button>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('shift')} title="Insert Identity Shift block">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('shift'); }} title="Insert Identity Shift block">
             🎯 Shift
           </button>
-          <button className="toolbar-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => applyFormatting('action')} title="Insert 1% Habit Action block">
+          <button className="toolbar-btn" onMouseDown={(e) => { e.preventDefault(); applyFormatting('action'); }} title="Insert 1% Habit Action block">
             ⚡ Action
           </button>
         </div>
@@ -3164,7 +3164,7 @@ Action Type: Build Good Habit
                 style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }} 
                 title="View Changelog & About"
               >
-                v1.5.0
+                v1.5.1
               </div>
             </div>
           </aside>
@@ -3240,7 +3240,7 @@ Action Type: Build Good Habit
                     </div>
 
                     <div className="editor-header-right">
-                      <button className="btn-secondary" onMouseDown={(e) => e.preventDefault()} onClick={handleAddDailyEntry} title="Add dated daily entry block">
+                      <button className="btn-secondary" onMouseDown={(e) => { e.preventDefault(); handleAddDailyEntry(); }} title="Add dated daily entry block">
                         <Icons.Plus />
                         <span className="desktop-text" style={{ marginLeft: '4px' }}>+ Add daily entry</span>
                         <span className="mobile-text" style={{ marginLeft: '4px' }}>+ Entry</span>
@@ -3250,8 +3250,7 @@ Action Type: Build Good Habit
                       <div style={{ position: 'relative' }}>
                         <button 
                           className="btn-secondary" 
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
+                          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setTemplateMenuOpen(!templateMenuOpen); }}
                           title="Insert template block at cursor"
                         >
                           <span>📋</span>
@@ -3260,15 +3259,15 @@ Action Type: Build Good Habit
                         </button>
                         {templateMenuOpen && (
                           <div className="template-dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                            <button className="dropdown-item" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertTextAtCursor(Templates.chapter(getTodayDateString())); setTemplateMenuOpen(false); }}>
+                            <button className="dropdown-item" onMouseDown={(e) => { e.preventDefault(); insertTextAtCursor(Templates.chapter(getTodayDateString())); setTemplateMenuOpen(false); }}>
                               <span className="dropdown-item-title">📖 Reading Notes</span>
                               <span className="dropdown-item-desc">Chapter review layout</span>
                             </button>
-                            <button className="dropdown-item" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertTextAtCursor(Templates.habitLoop()); setTemplateMenuOpen(false); }}>
+                            <button className="dropdown-item" onMouseDown={(e) => { e.preventDefault(); insertTextAtCursor(Templates.habitLoop()); setTemplateMenuOpen(false); }}>
                               <span className="dropdown-item-title">🔄 Habit Loop Builder</span>
                               <span className="dropdown-item-desc">Cue, Craving, Response, Reward</span>
                             </button>
-                            <button className="dropdown-item" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertTextAtCursor(Templates.frictionCanvas()); setTemplateMenuOpen(false); }}>
+                            <button className="dropdown-item" onMouseDown={(e) => { e.preventDefault(); insertTextAtCursor(Templates.frictionCanvas()); setTemplateMenuOpen(false); }}>
                               <span className="dropdown-item-title">🎨 Environmental Canvas</span>
                               <span className="dropdown-item-desc">Increase/Decrease friction</span>
                             </button>
@@ -3622,8 +3621,9 @@ Action Type: Build Good Habit
                     />
                   </div>
 
-                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.5.0):</h5>
+                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.5.1):</h5>
                   <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '1.6' }}>
+                    <li>🛠️ <strong>Toolbar Event Handling (v1.5.1)</strong>: Fixed toolbar click suppression on various browser/device configurations by migrating handlers to <code>onMouseDown</code>.</li>
                     <li>💾 <strong>Manual Data Backup & Restore</strong>: Export notes and streaks to a JSON file and import them to sync across browsers/profiles.</li>
                     <li>⚡ <strong>State Partitioning (Typing Speedup)</strong>: Isolated editor state to eliminate keystroke delays and prevent root re-renders.</li>
                     <li>⏳ <strong>Non-blocking Disk Writes</strong>: Defer localStorage writes using requestIdleCallback to reduce input blocking time.</li>
