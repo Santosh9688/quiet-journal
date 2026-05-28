@@ -2037,29 +2037,21 @@ Action Type: Build Good Habit
             return;
         }
 
-        textarea.focus();
-        try {
-          textarea.setSelectionRange(start, end);
-          if (!document.execCommand('insertText', false, textToInsert)) {
-            throw new Error('execCommand failed');
-          }
-        } catch (e) {
-          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
-          if (noteType === 'chapter') {
-            const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(localContent);
-            const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
-            handleLocalChange(newContent);
-          } else if (noteType === 'habitLoop') {
-            const { habitTitle, actionType } = parseHabitLoopHeader(localContent);
-            const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
-            handleLocalChange(newContent);
-          } else if (noteType === 'friction') {
-            const { targetHabit, goal } = parseFrictionHeader(localContent);
-            const newContent = updateFrictionHeader(targetHabit, goal, newText);
-            handleLocalChange(newContent);
-          } else {
-            handleLocalChange(newText);
-          }
+        const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+        if (noteType === 'chapter') {
+          const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(localContent);
+          const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
+          handleLocalChange(newContent);
+        } else if (noteType === 'habitLoop') {
+          const { habitTitle, actionType } = parseHabitLoopHeader(localContent);
+          const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
+          handleLocalChange(newContent);
+        } else if (noteType === 'friction') {
+          const { targetHabit, goal } = parseFrictionHeader(localContent);
+          const newContent = updateFrictionHeader(targetHabit, goal, newText);
+          handleLocalChange(newContent);
+        } else {
+          handleLocalChange(newText);
         }
 
         pendingSelectionRef.current = { start: start + selStartOffset, end: start + selEndOffset };
@@ -2571,40 +2563,31 @@ Action Type: Build Good Habit
 
         const start = selectionRangeRef.current.start;
         const end = selectionRangeRef.current.end;
-
-        textarea.focus();
-        try {
-          textarea.setSelectionRange(start, end);
-          if (!document.execCommand('insertText', false, textToInsert)) {
-            throw new Error('execCommand failed');
-          }
-        } catch (e) {
-          const currentText = textarea.value;
-          const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
-          
-          const noteType = getNoteType(activeNote.content);
-          if (noteType === 'chapter') {
-            const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(activeNote.content);
-            const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
-            handleEditNoteText(newContent);
-          } else if (noteType === 'habitLoop') {
-            const { habitTitle, actionType } = parseHabitLoopHeader(activeNote.content);
-            const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
-            handleEditNoteText(newContent);
-          } else if (noteType === 'friction') {
-            const { targetHabit, goal } = parseFrictionHeader(activeNote.content);
-            const newContent = updateFrictionHeader(targetHabit, goal, newText);
-            handleEditNoteText(newContent);
-          } else {
-            handleEditNoteText(newText);
-          }
-
-          setTimeout(() => {
-            textarea.focus();
-            const newCursorPos = start + textToInsert.length;
-            textarea.setSelectionRange(newCursorPos, newCursorPos);
-          }, 50);
+        const currentText = textarea.value;
+        const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+        
+        const noteType = getNoteType(activeNote.content);
+        if (noteType === 'chapter') {
+          const { chapterNum, chapterTitle, pages, started } = parseChapterHeader(activeNote.content);
+          const newContent = updateChapterHeader(chapterNum, chapterTitle, pages, started, newText);
+          handleEditNoteText(newContent);
+        } else if (noteType === 'habitLoop') {
+          const { habitTitle, actionType } = parseHabitLoopHeader(activeNote.content);
+          const newContent = updateHabitLoopHeader(habitTitle, actionType, newText);
+          handleEditNoteText(newContent);
+        } else if (noteType === 'friction') {
+          const { targetHabit, goal } = parseFrictionHeader(activeNote.content);
+          const newContent = updateFrictionHeader(targetHabit, goal, newText);
+          handleEditNoteText(newContent);
+        } else {
+          handleEditNoteText(newText);
         }
+
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + textToInsert.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 50);
       };
 
 
@@ -2628,48 +2611,29 @@ Action Type: Build Good Habit
         const textarea = textareaRef.current;
         setEditorMode('edit');
 
-        if (textarea) {
-          textarea.focus();
-          let insertPos;
-          let textToInsert = '';
+        let insertPos;
+        let textToInsert = '';
 
-          if (index !== -1) {
-            insertPos = index + delimiter.length;
-            textToInsert = "\n" + dailyBlock;
-          } else {
-            insertPos = text.length;
-            textToInsert = "\n\n" + delimiter + "\n" + dailyBlock;
-          }
-
-          try {
-            textarea.setSelectionRange(insertPos, insertPos);
-            if (!document.execCommand('insertText', false, textToInsert)) {
-              throw new Error('execCommand failed');
-            }
-            setTimeout(() => {
-              textarea.focus();
-              const updatedText = textarea.value;
-              const pos = updatedText.indexOf(todayStr) + todayStr.length + 11;
-              textarea.setSelectionRange(pos, pos);
-            }, 50);
-          } catch (e) {
-            // Fallback manual replacement
-            const updatedContent = index !== -1
-              ? text.slice(0, insertPos) + "\n" + dailyBlock + text.slice(insertPos)
-              : text + "\n\n" + delimiter + "\n" + dailyBlock;
-            handleEditNoteText(updatedContent);
-            setTimeout(() => {
-              textarea.focus();
-              const pos = updatedContent.indexOf(todayStr) + todayStr.length + 11;
-              textarea.setSelectionRange(pos, pos);
-            }, 50);
-          }
+        if (index !== -1) {
+          insertPos = index + delimiter.length;
+          textToInsert = "\n" + dailyBlock;
         } else {
-          // No textarea (e.g. preview mode fallback)
-          const updatedContent = index !== -1
-            ? text.slice(0, index + delimiter.length) + "\n" + dailyBlock + text.slice(index + delimiter.length)
-            : text + "\n\n" + delimiter + "\n" + dailyBlock;
-          handleEditNoteText(updatedContent);
+          insertPos = text.length;
+          textToInsert = "\n\n" + delimiter + "\n" + dailyBlock;
+        }
+
+        const updatedContent = index !== -1
+          ? text.slice(0, insertPos) + "\n" + dailyBlock + text.slice(insertPos)
+          : text + "\n\n" + delimiter + "\n" + dailyBlock;
+
+        handleEditNoteText(updatedContent);
+
+        if (textarea) {
+          setTimeout(() => {
+            textarea.focus();
+            const pos = updatedContent.indexOf(todayStr) + todayStr.length + 11;
+            textarea.setSelectionRange(pos, pos);
+          }, 50);
         }
       };
 
@@ -3211,7 +3175,7 @@ Action Type: Build Good Habit
                 style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }} 
                 title="View Changelog & About"
               >
-                v1.5.1
+                v1.5.3
               </div>
             </div>
           </aside>
@@ -3669,8 +3633,9 @@ Action Type: Build Good Habit
                     />
                   </div>
 
-                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.5.1):</h5>
+                  <h5 style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Changes (v1.5.3):</h5>
                   <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingLeft: '20px', lineHeight: '1.6' }}>
+                    <li>🔒 <strong>Deterministic State-Based Formatting (v1.5.3)</strong>: Replaced legacy browser <code>execCommand</code> insertions with pure React state mutations, making formatting 100% reliable across security-restricted profiles and extensions.</li>
                     <li>🛠️ <strong>Toolbar Event Handling (v1.5.1)</strong>: Fixed toolbar click suppression on various browser/device configurations by migrating handlers to <code>onMouseDown</code>.</li>
                     <li>💾 <strong>Manual Data Backup & Restore</strong>: Export notes and streaks to a JSON file and import them to sync across browsers/profiles.</li>
                     <li>⚡ <strong>State Partitioning (Typing Speedup)</strong>: Isolated editor state to eliminate keystroke delays and prevent root re-renders.</li>
